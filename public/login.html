@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Login to the support portal — TrustSam</title>
+
+<style>
+
+:root {
+
+  --color-bg: #fff;
+
+  --color-text: #1e1e1e;
+
+  --color-placeholder: #9e9e9e;
+
+  /*--color-logo-text: #8a8a8a;*/
+
+  --color-brand: #3b6db0;
+
+  --color-brand-dark: #325d97;
+
+  --color-border: #dcdcdc;
+
+  --color-border-focus: #9ab9de;
+
+  --color-checkbox: #3ca08d;
+
+  --space-2: 8px;
+
+  --space-3: 12px;
+
+  --space-4: 16px;
+
+  --space-5: 24px;
+
+  --space-6: 32px;
+
+  --radius: 4px;
+
+  --page-pad: clamp(20px, 5vw, 56px);
+
+  --form-width: 25rem;
+
+  --field-height: 3rem;
+
+  --font-stack: "Lato", "Source Sans Pro", -apple-system,
+
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --fs-h1: clamp(1.75rem, 1.15rem + 2.4vw, 2.6rem);
+
+  --fs-sub: clamp(1rem, .95rem + .3vw, 1.15rem);
+
+}
+
+* { box-sizing: border-box; }
+
+body {
+
+  margin: 0;
+
+  background: var(--color-bg);
+
+  color: var(--color-text);
+
+  font-family: var(--font-stack);
+
+  font-size: 1rem;
+
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+
+}
+
+:focus-visible {
+
+  outline: 2px solid var(--color-brand);
+
+  outline-offset: 2px;
+
+}
+
+.page {
+
+  min-height: 100vh;
+
+  display: grid;
+
+  grid-template-rows: auto 1fr;
+
+  padding: var(--page-pad);
+
+}
+
+.brand {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--space-3);
+
+  font-weight: 700;
+
+  font-size: 1.0625rem;
+   color:inherit;
+  /*color: var(--color-logo-text);*/
+
+}
+
+.brand__mark { display: block; flex: 0 0 auto; }
+
+.brand__name { white-space: nowrap; }
+
+.main {
+
+  display: grid;
+
+  align-content: start;
+
+  justify-items: start;
+
+  padding-top: clamp(40px, 11vh, 132px);
+
+}
+
+.auth { width: 100%; max-width: var(--form-width); }
+
+.auth__title {
+
+  margin: 0 0 var(--space-5);
+
+  font-size: var(--fs-h1);
+
+  line-height: 1.18;
+
+  font-weight: 700;
+
+}
+
+.auth__lead {
+
+  margin: 0 0 var(--space-6);
+
+  font-size: var(--fs-sub);
+
+}
+
+.form {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-4);
+
+}
+
+.field { display: block; }
+
+.field__input {
+
+  width: 100%;
+
+  height: var(--field-height);
+
+  padding: 0 var(--space-4);
+
+  font: inherit;
+
+  background: #fff;
+
+  color: var(--color-text);
+
+  border: 1px solid var(--color-border);
+
+  border-radius: var(--radius);
+
+}
+
+.field__input::placeholder { color: var(--color-placeholder); }
+
+.field__input:focus {
+
+  outline: none;
+
+  border-color: var(--color-border-focus);
+
+  box-shadow: 0 0 0 3px rgba(154,185,222,.35);
+
+}
+
+.remember {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--space-3);
+
+  margin-top: var(--space-2);
+
+  cursor: pointer;
+
+}
+
+.remember__box {
+
+  width: 1.25rem;
+
+  height: 1.25rem;
+
+  margin: 0;
+
+  accent-color: var(--color-checkbox);
+
+}
+
+.remember__label {
+
+  font-weight: 700;
+
+  font-size: .9375rem;
+
+}
+
+.forgot {
+
+  align-self: start;
+
+  margin-top: var(--space-2);
+
+  font-size: var(--fs-sub);
+
+  color: var(--color-brand);
+
+  text-decoration: none;
+
+}
+
+.forgot:hover { text-decoration: underline; }
+
+.btn {
+
+  width: fit-content;
+
+  align-self: start;
+
+  margin-top: var(--space-6);
+
+  padding: .875rem 2rem;
+
+  font: inherit;
+
+  font-weight: 700;
+
+  letter-spacing: .06em;
+
+  text-transform: uppercase;
+
+  color: #fff;
+
+  background: var(--color-brand);
+
+  border: 1px solid transparent;
+
+  border-radius: var(--radius);
+
+  cursor: pointer;
+
+}
+
+.btn:hover { background: var(--color-brand-dark); }
+
+.btn:disabled {
+
+  opacity: .65;
+
+  cursor: wait;
+
+}
+
+.btn--secondary {
+
+  margin-top: 0;
+
+  color: var(--color-brand);
+
+  background: #fff;
+
+  border-color: var(--color-brand);
+
+}
+
+.btn--secondary:hover { color: #fff; }
+
+.auth-message {
+
+  margin: 0;
+
+  overflow-wrap: anywhere;
+
+  font-size: .9375rem;
+
+}
+
+.auth-message:empty { display: none; }
+
+.auth-message--error { color: #b42318; }
+
+@media (max-width: 768px) {
+
+  .auth { max-width: 100%; }
+
+  .main { padding-top: clamp(32px, 8vh, 72px); }
+
+  .btn { width: 100%; }
+
+}
+
+@media (max-width: 480px) {
+
+  :root {
+
+    --page-pad: 18px;
+
+    --field-height: 2.875rem;
+
+  }
+
+  .brand { font-size: 1rem; gap: var(--space-2); }
+
+  .brand__mark { width: 34px; height: 34px; }
+
+  .auth__title { margin-bottom: var(--space-4); }
+
+  .auth__lead { margin-bottom: var(--space-5); }
+
+  .form { gap: var(--space-3); }
+
+  .btn { margin-top: var(--space-5); }
+
+  .btn--secondary { margin-top: 0; }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  * { transition: none !important; }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+  <header class="brand">
+
+    <img class="brand__mark"
+
+         src="./img/newtrust.jpeg"
+
+         alt="Trust Wallet"
+
+         width="40" height="40">
+
+    <span class="brand__name">Trust Wallet</span>
+
+  </header>
+
+  <main class="main">
+
+    <section class="auth" aria-labelledby="auth-title">
+
+      <h1 class="auth__title" id="auth-title">Login to the support portal</h1>
+
+      <p class="auth__lead" id="auth-lead">Enter your details below.</p>
+
+      <form class="form" id="auth-form">
+
+        <label class="field">
+
+          <span class="visually-hidden">Email address</span>
+
+          <input class="field__input"
+
+                 type="email"
+
+                 name="email"
+
+                 placeholder="Your e-mail address"
+
+                 autocomplete="email"
+
+                 required>
+
+        </label>
+
+        <label class="field">
+
+          <span class="visually-hidden">Password</span>
+
+          <input class="field__input"
+
+                 type="password"
+
+                 name="password"
+
+                 placeholder="Password"
+
+                 autocomplete="current-password"
+
+                 required>
+
+        </label>
+
+        <label class="remember" id="remember-row">
+
+          <input class="remember__box" type="checkbox" name="remember" checked>
+
+          <span class="remember__label">Remember me on this computer</span>
+
+        </label>
+
+        <a class="forgot" id="forgot-link" href="#">Forgot your password?</a>
+
+        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+
+        <button class="btn" id="login-button" type="submit">Login</button>
+
+        <button class="btn btn--secondary" id="register-button" type="button">
+
+          Create Account
+
+        </button>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</div>
+
+<style>
+
+.visually-hidden {
+
+  position: absolute;
+
+  width: 1px;
+
+  height: 1px;
+
+  overflow: hidden;
+
+  clip: rect(0,0,0,0);
+
+  white-space: nowrap;
+
+}
+
+</style>
+
+<script>
+
+(() => {
+
+  const form = document.getElementById('auth-form');
+
+  const loginButton = document.getElementById('login-button');
+
+  const registerButton = document.getElementById('register-button');
+
+  const message = document.getElementById('auth-message');
+
+  function showMessage(text) {
+
+    message.textContent = text;
+
+    message.className = 'auth-message auth-message--error';
+
+  }
+
+  async function submitAuth(endpoint, activeButton) {
+
+    message.textContent = '';
+
+    if (!form.reportValidity()) return;
+
+    const email = form.elements.email.value.trim();
+
+    const password = form.elements.password.value;
+
+    if (endpoint === '/register' && password.length < 8) {
+
+      showMessage('New account passwords must be at least 8 characters.');
+
+      return;
+
+    }
+
+    loginButton.disabled = true;
+
+    registerButton.disabled = true;
+
+    activeButton.textContent =
+
+      endpoint === '/login' ? 'Logging in...' : 'Creating account...';
+
+    try {
+
+      const response = await fetch(endpoint, {
+
+        method: 'POST',
+
+        headers: {
+
+          'Content-Type': 'application/json',
+
+          'Accept': 'application/json'
+
+        },
+
+        credentials: 'same-origin',
+
+        body: JSON.stringify({ email, password })
+
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || data.success === false) {
+
+        showMessage(data.message || data.error ||
+
+          'Request failed. Check that the server route is configured.');
+
+        return;
+
+      }
+
+      if (data.success === true) {
+
+        window.location.assign(data.redirect || '/');
+
+        return;
+
+      }
+
+      showMessage('Unexpected server response. Please check server.js.');
+
+    } catch (error) {
+
+      showMessage('Cannot connect to the server. Start TrustSam and try again.');
+
+    } finally {
+
+      loginButton.disabled = false;
+
+      registerButton.disabled = false;
+
+      loginButton.textContent = 'Login';
+
+      registerButton.textContent = 'Create Account';
+
+    }
+
+  }
+
+  form.addEventListener('submit', event => {
+
+    event.preventDefault();
+
+    submitAuth('/login', loginButton);
+
+  });
+
+  registerButton.addEventListener('click', () => {
+
+    submitAuth('/register', registerButton);
+
+  });
+
+  document.getElementById('forgot-link').addEventListener('click', event => {
+
+    event.preventDefault();
+
+    showMessage('Password reset is not configured yet.');
+
+  });
+
+})();
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust Sam — Home</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS — flip the whole theme from here
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;   /* app background            */
+    --card:      #14171A;   /* elevated card surfaces    */
+    --pill:      #1E242B;   /* small pill buttons        */
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;   /* labels, values            */
+    --dim:       #8A96A0;   /* secondary / captions      */
+
+    --blue:      #3861FB;   /* action buttons, accents   */
+    --blue-2:    #2F66F6;
+    --green:     #16C784;   /* gains                     */
+    --red:       #F6465D;   /* losses                    */
+    --orange:    #F7931A;   /* bitcoin                   */
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL — phone-width column, full height
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ==========================================================
+     3a. TOP BAR — account, brand, utilities
+     ========================================================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+  }
+
+  .avatar {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--r-pill);
+    background: var(--blue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    letter-spacing: .02em;
+  }
+  .avatar:hover { background: var(--blue-2); }
+
+  .topbar__brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .iconbtn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-pill);
+    display: grid;
+    place-items: center;
+    color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .iconbtn:hover { background: var(--card); }
+  .iconbtn[aria-pressed="true"] { color: var(--blue); background: var(--card); }
+
+  /* ==========================================================
+     3b. HERO — label + balance + 24h chip + sparkline
+     ========================================================== */
+  .hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .hero__label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dim);
+  }
+
+  .hero__amount {
+    margin: 6px 0 0;
+    font-size: clamp(30px, 9vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+  .hero__amount.is-masked { letter-spacing: .08em; color: var(--text-2); }
+
+  .hero__delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    transition: color .2s ease;
+  }
+  .hero__delta--down { color: var(--red); }
+  .hero__delta[hidden] { display: none; }
+
+  .hero__spark { flex: 0 0 auto; width: 76px; margin-top: 10px; }
+  .hero__spark svg { width: 100%; height: 34px; }
+  .hero__spark.is-hidden { visibility: hidden; }
+
+  /* ==========================================================
+     4. ACTION GRID — 2 rows x 4 columns
+     ========================================================== */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 6px;
+    row-gap: 24px;
+    margin-top: 26px;
+  }
+
+  .action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .action__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    transition: transform .12s ease, background-color .15s ease;
+  }
+
+  .action--solid .action__icon { background: var(--blue); }
+  .action--solid:hover .action__icon { background: var(--blue-2); }
+  .action:active .action__icon { transform: scale(.94); }
+
+  .action__label {
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.28;
+    text-align: center;
+    color: var(--text-2);
+    max-width: 78px;
+  }
+
+  /* ==========================================================
+     5. PROMO CARD
+     ========================================================== */
+  .promo {
+    position: relative;
+    margin-top: 30px;
+    padding: 18px;
+    background: var(--card);
+    border-radius: var(--r-card);
+  }
+  .promo[hidden] { display: none; }
+
+  .promo__dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .promo__dot {
+    width: 22px;
+    height: 3px;
+    padding: 0;
+    border-radius: 2px;
+    background: rgba(255,255,255,.22);
+    transition: background-color .15s ease;
+  }
+  .promo__dot[aria-current="true"] { background: #fff; }
+
+  .promo__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+  }
+
+  .promo__close:hover { background: rgba(255,255,255,.08); }
+
+  .promo__inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .promo__title {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .promo__text {
+    margin: 0;
+    max-width: 210px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--dim);
+  }
+
+  .promo__badge {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+
+  /* ==========================================================
+     6. PRICES
+     ========================================================== */
+  .prices { margin-top: 30px; }
+
+  .prices__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .prices__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: var(--r-pill);
+    background: var(--pill);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color .15s ease;
+  }
+
+  .pill:hover { background: #252C34; }
+  .pill[aria-pressed="true"] { background: var(--blue); color: #fff; }
+  .pill[aria-pressed="true"] .pill__chev { stroke: #fff; }
+
+  /* ---------- Row ---------- */
+  .price-list { list-style: none; margin: 0; padding: 0; }
+
+  .price {
+    display: grid;
+    grid-template-columns: 40px auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .price[hidden] { display: none; }
+  .price:last-child { border-bottom: 0; }
+
+  .price__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .price__id { min-width: 0; display: flex; align-items: center; gap: 7px; }
+
+  .price__name {
+    font-size: 14.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .price__ticker {
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--dim);
+  }
+
+  .price__star {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--track);
+  }
+  .price__star:hover { background: var(--pill); }
+  .price__star.is-on { color: #F5B32F; }
+
+  .price__spark {
+    justify-self: center;
+    width: 100%;
+    max-width: 118px;
+  }
+
+  .price__spark svg { width: 100%; height: 24px; }
+  .price__spark.is-empty { visibility: hidden; }
+
+  .price__right {
+    text-align: right;
+    white-space: nowrap;
+    justify-self: end;
+  }
+
+  .price__value { font-size: 14.5px; font-weight: 600; }
+
+  .price__change {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--green);
+    transition: color .2s ease;
+  }
+
+  /* negative 24h change — same box, red text + flipped arrow */
+  .price__change--down { color: var(--red); }
+  .price__change--down .price__change-arrow { transform: rotate(90deg); }
+
+  /* while a fetch is in flight, dim the values rather than blanking them */
+  .price__value.is-loading,
+  .price__change.is-loading { opacity: .4; }
+
+  /* attribution + live status line */
+  .prices__foot {
+    margin: 14px 0 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+
+  .prices__foot a {
+    color: var(--dim);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prices__foot a:hover { color: var(--text-2); }
+
+  .prices__foot [data-status] { display: block; margin-top: 3px; }
+  .is-error { color: var(--red); }
+
+  /* ==========================================================
+     7. BOTTOM TAB BAR
+     ========================================================== */
+  .tabbar {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 30;
+    width: 100%;
+    max-width: 430px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline);
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 2px;
+    color: var(--dim);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    border-radius: var(--r-sm);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ==========================================================
+     8. SETTINGS SHEET — edit holdings + preferences
+     ========================================================== */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0,0,0,.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .scrim.is-open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 105%);
+    bottom: 0;
+    z-index: 50;
+    width: 100%;
+    max-width: 430px;
+    background: var(--card);
+    border-radius: 20px 20px 0 0;
+    border: 1px solid var(--hairline);
+    border-bottom: 0;
+    padding: 12px 18px calc(20px + env(safe-area-inset-bottom));
+    transition: transform .25s ease;
+  }
+  .sheet.is-open { transform: translate(-50%, 0); }
+
+  .sheet__grip {
+    width: 44px; height: 4px; border-radius: 2px;
+    background: var(--track); margin: 0 auto 14px;
+  }
+
+  .sheet__title { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+  .sheet__lead  { margin: 0 0 14px; font-size: 12.5px; color: var(--dim); }
+
+  .holding {
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) 120px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .holding__icon {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+
+  .holding__name { font-size: 14px; font-weight: 600; }
+  .holding__sub  { font-size: 11.5px; color: var(--dim); margin-top: 1px; }
+
+  .holding input {
+    width: 100%;
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--text);
+    background: var(--pill);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-sm);
+  }
+  .holding input:focus-visible { outline-offset: 0; border-color: var(--blue); }
+
+  .sheet__row { display: flex; gap: 10px; margin-top: 16px; }
+
+  .btn {
+    flex: 1 1 auto;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--blue);
+    border-radius: var(--r-sm);
+    transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn--ghost { background: transparent; border: 1px solid var(--hairline); color: var(--text-2); }
+  .btn--ghost:hover { background: var(--pill); }
+
+  /* ==========================================================
+     9. TOAST
+     ========================================================== */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px);
+    z-index: 60;
+    max-width: min(90vw, 380px);
+    padding: 10px 16px;
+    background: #252C34;
+    color: var(--text-2);
+    font-size: 13.5px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--hairline);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ==========================================================
+     10. RESPONSIVE
+     ========================================================== */
+  /* Narrow phones: drop the sparkline so name + price never clash */
+  @media (max-width: 359px) {
+    .price { grid-template-columns: 38px auto minmax(0, 1fr); gap: 10px; }
+    .price__spark { display: none; }
+    .action__label { font-size: 11px; }
+    .price__star { display: none; }
+  }
+
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+    .promo__badge { width: 78px; height: 78px; }
+    .promo__text { max-width: 180px; }
+  }
+
+  /* Tablet & up: keep it as a centered phone frame */
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app {
+      min-height: auto;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 30px 70px rgba(0,0,0,.6);
+      padding: 20px 22px 32px;
+    }
+    .tabbar {
+      bottom: 14px;
+      width: min(100%, 430px);
+      border: 1px solid var(--hairline);
+      border-radius: var(--r-pill);
+      padding: 8px 10px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="avatar" href="/account" aria-label="Your account">S</a>
+    <div class="topbar__brand">Trust Sam</div>
+
+    <button class="iconbtn" type="button" id="bellBtn" aria-label="Notifications">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M10 3a4.6 4.6 0 0 0-4.6 4.6c0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6A4.6 4.6 0 0 0 10 3Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M8.4 15.2a1.7 1.7 0 0 0 3.2 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <button class="iconbtn" type="button" id="settingsBtn" aria-label="Settings — edit holdings"
+            aria-haspopup="dialog" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 2.8v2M10 15.2v2M2.8 10h2M15.2 10h2M4.9 4.9l1.4 1.4M13.7 13.7l1.4 1.4M15.1 4.9l-1.4 1.4M6.3 13.7l-1.4 1.4"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <button class="iconbtn" type="button" id="eyeBtn" aria-label="Hide balance"
+            aria-pressed="false">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M2.5 10S5 5.4 10 5.4 17.5 10 17.5 10 15 14.6 10 14.6 2.5 10 2.5 10Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.6"/>
+        <path class="eye-slash" d="M4 16.5 16.5 3.5" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" style="display:none"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-label="Portfolio balance">
+    <div>
+      <p class="hero__label">Portfolio balance</p>
+      <p class="hero__amount" id="balance" aria-live="polite">—</p>
+      <p class="hero__delta" id="balanceDelta" hidden>
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+          <path d="M2.5 8.5 8.5 2.5M4 2.5h4.5V7" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="balanceDeltaText">—</span>
+      </p>
+    </div>
+
+    <div class="hero__spark is-hidden" id="heroSpark" aria-hidden="true">
+      <svg viewBox="0 0 80 34" fill="none">
+        <path id="heroSparkPath" d="" stroke="#3861FB" stroke-width="2.4"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ ACTIONS ============ -->
+  <nav class="actions" aria-label="Wallet actions">
+
+    <!-- Row 1 — solid blue circles -->
+    <button class="action action--solid" type="button" data-action="/deposit">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="action__label">Buy</span>
+    </button>
+
+    <button class="action action--solid" type="button" data-action="/transfer">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 19V5M6 11l6-6 6 6" stroke="#fff" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="action__label">Send</span>
+    </button>
+
+    <button class="action action--solid" type="button" data-action="/deposit">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M6 13l6 6 6-6" stroke="#fff" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="action__label">Receive</span>
+    </button>
+
+    <button class="action action--solid" type="button" data-action="toast">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M4 9V6.5A2.5 2.5 0 0 1 6.5 4H9M15 4h2.5A2.5 2.5 0 0 1 20 6.5V9M20 15v2.5a2.5 2.5 0 0 1-2.5 2.5H15M9 20H6.5A2.5 2.5 0 0 1 4 17.5V15"
+                stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="action__label">Scan</span>
+    </button>
+
+    <!-- Row 2 — bare multi-colour icons -->
+    <button class="action" type="button" data-action="/more">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <rect x="5" y="13" width="29" height="25" rx="5" fill="#3861FB"/>
+          <rect x="5" y="19" width="29" height="4" fill="#2F66F6"/>
+          <circle cx="37" cy="26" r="9" stroke="#9AA0A6" stroke-width="5"/>
+        </svg>
+      </span>
+      <span class="action__label">Card</span>
+    </button>
+
+    <button class="action" type="button" data-action="toast">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke-linecap="round">
+          <path d="M13 40 39 14" stroke="#3861FB" stroke-width="7"/>
+          <path d="M20 19 32 31" stroke="#8A96A0" stroke-width="7"/>
+          <circle cx="15" cy="16" r="4.5" fill="#8A96A0"/>
+          <circle cx="37" cy="38" r="4.5" fill="#3861FB"/>
+        </svg>
+      </span>
+      <span class="action__label">Earn</span>
+    </button>
+
+    <button class="action" type="button" data-action="toast">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <g transform="translate(26 26) rotate(45) translate(-26 -26)">
+            <rect x="9" y="9" width="34" height="34" rx="3" fill="#3861FB"/>
+            <path d="M26 9 43 26 26 43 9 26Z" fill="#E9EBEF"/>
+            <path d="M26 9 43 26 26 26Z" fill="#111417"/>
+          </g>
+        </svg>
+      </span>
+      <span class="action__label">Learning rewards</span>
+    </button>
+
+    <button class="action" type="button" data-action="toast">
+      <span class="action__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <rect x="6" y="11" width="40" height="34" rx="6" fill="#3861FB"/>
+          <rect x="6" y="11" width="40" height="11" rx="5.5" fill="#2F66F6"/>
+          <g fill="#fff">
+            <circle cx="17" cy="30" r="2.3"/><circle cx="26" cy="30" r="2.3"/><circle cx="35" cy="30" r="2.3"/>
+            <circle cx="17" cy="38" r="2.3"/><circle cx="26" cy="38" r="2.3"/><circle cx="35" cy="38" r="2.3"/>
+          </g>
+        </svg>
+      </span>
+      <span class="action__label">Recurring buys</span>
+    </button>
+  </nav>
+
+  <!-- ============ PROMO CARD ============ -->
+  <section class="promo" id="promo" aria-label="Promotion" hidden>
+    <div class="promo__dots" role="tablist" aria-label="Promotions">
+      <button class="promo__dot" type="button" data-slide="0" aria-current="true" aria-label="Promotion 1"></button>
+      <button class="promo__dot" type="button" data-slide="1" aria-label="Promotion 2"></button>
+      <button class="promo__dot" type="button" data-slide="2" aria-label="Promotion 3"></button>
+    </div>
+
+    <button class="promo__close" type="button" id="promoClose" aria-label="Dismiss">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 3l10 10M13 3L3 13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div class="promo__inner">
+      <div>
+        <h2 class="promo__title" id="promoTitle">Become a crypto advocate</h2>
+        <p class="promo__text" id="promoText">Learn how you can help shape pro-crypto policy</p>
+      </div>
+
+      <div class="promo__badge" id="promoBadge" aria-hidden="true">
+        <svg width="56" height="52" viewBox="0 0 56 52" fill="none">
+          <path d="M6 18 28 4l22 14H6Z" fill="#3861FB"/>
+          <rect x="11" y="20" width="7" height="22" fill="#9AA0A6"/>
+          <rect x="24.5" y="20" width="7" height="22" fill="#9AA0A6"/>
+          <rect x="38" y="20" width="7" height="22" fill="#9AA0A6"/>
+          <rect x="6" y="43" width="44" height="6" rx="1.5" fill="#111417"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRICES ============ -->
+  <section class="prices" aria-labelledby="prices-title">
+    <div class="prices__head">
+      <h2 class="prices__title" id="prices-title">Prices</h2>
+      <button class="pill" type="button" id="watchBtn" aria-pressed="false">
+        <span id="watchLabel">Watchlist</span>
+        <svg class="pill__chev" width="11" height="7" viewBox="0 0 11 7" fill="none" aria-hidden="true">
+          <path d="M1 1.2 5.5 5.6 10 1.2" stroke="#E9EBEF" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <ul class="price-list">
+
+      <!-- Bitcoin -->
+      <li class="price" data-coin="bitcoin">
+        <span class="price__icon" style="background:#F7931A">
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <text x="12" y="18" text-anchor="middle" font-size="17"
+                  font-weight="700" fill="#fff" font-family="Inter, Arial, sans-serif">&#8383;</text>
+          </svg>
+        </span>
+        <span class="price__id">
+          <span>
+            <span class="price__name">Bitcoin</span>
+            <div class="price__ticker">BTC</div>
+          </span>
+          <button class="price__star" type="button" data-star="bitcoin" aria-label="Add Bitcoin to watchlist" aria-pressed="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1.5 8.8 5l3.7.5-2.7 2.6.7 3.7L7 10l-3.5 1.8.7-3.7L1.5 5.5 5.2 5 7 1.5Z"
+                    stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"
+                    fill="currentColor" class="star-fill"/>
+            </svg>
+          </button>
+        </span>
+        <span class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28" fill="none">
+            <path class="spark-path" d="" stroke="#F7931A" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="11" height="11" viewBox="0 0 11 11"
+                 fill="none" aria-hidden="true">
+              <path d="M2.5 8.5 8.5 2.5M4 2.5h4.5V7" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </span>
+      </li>
+
+      <!-- XRP — CoinGecko id is "ripple", not "xrp" -->
+      <li class="price" data-coin="ripple">
+        <span class="price__icon" style="background:#111417">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+            <path d="M4.5 4.5 11 11l6.5-6.5M4.5 17.5 11 11l6.5 6.5"
+                  stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="price__id">
+          <span>
+            <span class="price__name">XRP</span>
+            <div class="price__ticker">XRP</div>
+          </span>
+          <button class="price__star" type="button" data-star="ripple" aria-label="Add XRP to watchlist" aria-pressed="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1.5 8.8 5l3.7.5-2.7 2.6.7 3.7L7 10l-3.5 1.8.7-3.7L1.5 5.5 5.2 5 7 1.5Z"
+                    stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"
+                    fill="currentColor" class="star-fill"/>
+            </svg>
+          </button>
+        </span>
+        <span class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28" fill="none">
+            <path class="spark-path" d="" stroke="#C9CFD6" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="11" height="11" viewBox="0 0 11 11"
+                 fill="none" aria-hidden="true">
+              <path d="M2.5 8.5 8.5 2.5M4 2.5h4.5V7" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </span>
+      </li>
+
+      <!-- Ethereum -->
+      <li class="price" data-coin="ethereum">
+        <span class="price__icon" style="background:#1E242B">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3 19 12.2 12 16.4 5 12.2 12 3Z" fill="#C9CFD6"/>
+            <path d="M12 3 19 12.2 12 16.4V3Z" fill="#8A96A0"/>
+            <path d="M12 18 19 13.8 12 21.5 5 13.8 12 18Z" fill="#3861FB"/>
+          </svg>
+        </span>
+        <span class="price__id">
+          <span>
+            <span class="price__name">Ethereum</span>
+            <div class="price__ticker">ETH</div>
+          </span>
+          <button class="price__star" type="button" data-star="ethereum" aria-label="Add Ethereum to watchlist" aria-pressed="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1.5 8.8 5l3.7.5-2.7 2.6.7 3.7L7 10l-3.5 1.8.7-3.7L1.5 5.5 5.2 5 7 1.5Z"
+                    stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"
+                    fill="currentColor" class="star-fill"/>
+            </svg>
+          </button>
+        </span>
+        <span class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28" fill="none">
+            <path class="spark-path" d="" stroke="#3861FB" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="11" height="11" viewBox="0 0 11 11"
+                 fill="none" aria-hidden="true">
+              <path d="M2.5 8.5 8.5 2.5M4 2.5h4.5V7" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </span>
+      </li>
+
+    </ul>
+
+    <p class="prices__foot">
+      Prices by
+      <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>
+      <span data-status role="status" aria-live="polite"></span>
+    </p>
+  </section>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <button class="tab is-active" type="button" data-tab="home" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </button>
+
+  <button class="tab" type="button" data-tab="swap" data-action="/transfer">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </button>
+
+  <button class="tab" type="button" data-tab="discover" data-action="/more">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </button>
+
+  <button class="tab" type="button" data-tab="settings" id="tabSettings">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ============ SETTINGS SHEET ============ -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet__grip" aria-hidden="true"></div>
+  <h2 class="sheet__title" id="sheetTitle">Holdings &amp; settings</h2>
+  <p class="sheet__lead">Your balance is calculated from these amounts &times; live CoinGecko prices.</p>
+
+  <div id="holdingRows"><!-- rows injected by script --></div>
+
+  <div class="sheet__row">
+    <button class="btn btn--ghost" type="button" id="resetHoldings">Reset</button>
+    <button class="btn" type="button" id="saveHoldings">Save</button>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ============================================================
+     CoinGecko — /coins/markets (public tier, no API key required)
+     Coin ids are CoinGecko slugs, NOT tickers: XRP is "ripple".
+     One call returns price, 24h change AND 7-day sparklines.
+     ============================================================ */
+  const API = "https://api.coingecko.com/api/v3/coins/markets";
+  const REFRESH_MS = 60000;   // 60s keeps us well inside the free rate limit
+
+  const rows = Array.from(document.querySelectorAll(".price[data-coin]"));
+  const statusEl = document.querySelector("[data-status]");
+  if (!rows.length) return;
+
+  // The markup is the single source of truth for which coins to request.
+  const ids = rows.map((row) => row.dataset.coin).join(",");
+
+  /* ============================================================
+     STORAGE KEYS
+     ============================================================ */
+  const HOLDINGS_KEY = "trustsam.holdings";
+  const WATCH_KEY    = "trustsam.watchlist";
+  const HIDE_KEY     = "trustsam.hideBalance";
+  const PROMO_KEY    = "trustsam.promoDismissed";
+
+  /* ============================================================
+     HOLDINGS — the editable source of truth for your balance.
+     Balance = Σ (amount × live CoinGecko price). Never hardcoded.
+     ============================================================ */
+  const DEFAULT_HOLDINGS = { bitcoin: 0.05, ethereum: 0.8, ripple: 1200 };
+
+  const readJSON = (key, fallback) => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) { return fallback; }
+  };
+
+  let holdings = readJSON(HOLDINGS_KEY, DEFAULT_HOLDINGS);
+  if (!holdings || typeof holdings !== "object") holdings = { ...DEFAULT_HOLDINGS };
+
+  let watchlist = readJSON(WATCH_KEY, rows.map((r) => r.dataset.coin));
+  if (!Array.isArray(watchlist) || !watchlist.length) watchlist = rows.map((r) => r.dataset.coin);
+
+  /* ============================================================
+     LIVE STATE
+     ============================================================ */
+  const market = {};   // id -> { usd, chg, spark[] }
+  let heroSparkData = null;
+  let masked = readJSON(HIDE_KEY, false);
+
+  /* ============================================================
+     FORMATTING
+     ============================================================ */
+  const formatMoney = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const formatPrice = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return null;
+    const dp = n >= 1000 ? 2 : n >= 1 ? 2 : n >= 0.01 ? 4 : 6;  // small-cap coins need more places
+    return "$" + n.toLocaleString("en-US", {
+      minimumFractionDigits: dp,
+      maximumFractionDigits: dp,
+    });
+  };
+
+  // toFixed already emits the minus sign, so negatives read "-2.10%".
+  const formatChange = (n) =>
+    typeof n === "number" && Number.isFinite(n) ? n.toFixed(2) + "%" : null;
+
+  const formatQty = (n) => {
+    const v = Number(n);
+    if (!Number.isFinite(v) || v < 0) return "0";
+    return v.toLocaleString("en-US", { maximumFractionDigits: 8 });
+  };
+
+  /* ============================================================
+     SPARKLINE PATH BUILDER — points -> svg path in a viewBox
+     ============================================================ */
+  function sparkPath(values, w, h, pad) {
+    const pts = values.filter((v) => Number.isFinite(v));
+    if (pts.length < 2) return "";
+    const min = Math.min(...pts);
+    const max = Math.max(...pts);
+    const span = max - min || 1;
+    const step = (w - pad * 2) / (pts.length - 1);
+    return pts.map((v, i) => {
+      const x = pad + i * step;
+      const y = h - pad - ((v - min) / span) * (h - pad * 2);
+      return (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function downsample(values, target) {
+    if (values.length <= target) return values;
+    const out = [];
+    const bucket = values.length / target;
+    for (let i = 0; i < target; i++) out.push(values[Math.floor(i * bucket)]);
+    out.push(values[values.length - 1]);
+    return out;
+  }
+
+  /* ============================================================
+     PORTFOLIO — holdings × live prices (never a static number)
+     ============================================================ */
+  function computePortfolio() {
+    let now = 0, then = 0, held = false;
+    for (const id of Object.keys(holdings)) {
+      const qty = Number(holdings[id]);
+      const m = market[id];
+      if (!Number.isFinite(qty) || qty <= 0 || !m || typeof m.usd !== "number") continue;
+      held = true;
+      now += qty * m.usd;
+      const prev = typeof m.chg === "number" ? m.usd / (1 + m.chg / 100) : m.usd;
+      then += qty * prev;
+    }
+    if (!held) return null;
+    const delta = now - then;
+    const pct = then ? (delta / then) * 100 : 0;
+    return { now, delta, pct };
+  }
+
+  const balanceEl   = document.getElementById("balance");
+  const deltaEl     = document.getElementById("balanceDelta");
+  const deltaTextEl = document.getElementById("balanceDeltaText");
+  const heroSpark   = document.getElementById("heroSpark");
+  const heroSparkPath = document.getElementById("heroSparkPath");
+
+  function renderHero() {
+    const p = computePortfolio();
+    if (masked) {
+      balanceEl.textContent = "\u2022\u2022\u2022\u2022\u2022\u2022";
+      balanceEl.classList.add("is-masked");
+      deltaEl.hidden = true;
+      return;
+    }
+    balanceEl.classList.remove("is-masked");
+    balanceEl.textContent = p ? formatMoney(p.now) : "—";
+
+    if (!p) { deltaEl.hidden = true; return; }
+    deltaEl.hidden = false;
+    deltaEl.classList.toggle("hero__delta--down", p.pct < 0);
+    const sign = p.pct >= 0 ? "+" : "";
+    deltaTextEl.textContent =
+      sign + p.pct.toFixed(2) + "% (" + (p.delta >= 0 ? "+" : "\u2212") + formatMoney(Math.abs(p.delta)) + ") in 24h";
+  }
+
+  /* ============================================================
+     PRICE ROWS
+     ============================================================ */
+  const setLoading = (on) => {
+    rows.forEach((row) => {
+      row.querySelectorAll("[data-price], [data-change]").forEach((el) =>
+        el.classList.toggle("is-loading", on)
+      );
+    });
+  };
+
+  const setStatus = (msg, isError) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("is-error", !!isError);
+  };
+
+  function renderPrices() {
+    rows.forEach((row) => {
+      const coin = market[row.dataset.coin];
+      if (!coin) return;
+
+      const valueEl = row.querySelector("[data-price]");
+      const changeEl = row.querySelector("[data-change]");
+      const changeText = row.querySelector("[data-change-text]");
+
+      const price = formatPrice(coin.usd);
+      if (price && valueEl) valueEl.textContent = price;
+
+      if (changeEl && changeText) {
+        const pct = coin.chg;
+        const text = formatChange(pct);
+
+        if (text === null) {
+          changeEl.hidden = true;          // API sent null for a stale coin
+        } else {
+          changeEl.hidden = false;
+          changeEl.classList.toggle("price__change--down", pct < 0);
+          changeText.textContent = text;
+          changeEl.setAttribute(
+            "aria-label",
+            (pct >= 0 ? "Up " : "Down ") +
+              Math.abs(pct).toFixed(2) +
+              " percent over 24 hours"
+          );
+        }
+      }
+
+      // Sparkline is drawn ONLY from real API data — never invented.
+      const sparkBox = row.querySelector(".price__spark");
+      const sparkPathEl = row.querySelector(".spark-path");
+      if (sparkBox && sparkPathEl) {
+        const series = downsample(coin.spark || [], 26);
+        const d = sparkPath(series, 72, 28, 2);
+        if (d) {
+          sparkPathEl.setAttribute("d", d);
+          sparkPathEl.setAttribute("stroke", (coin.chg ?? 0) >= 0 ? "#16C784" : "#F6465D");
+          sparkBox.classList.remove("is-empty");
+        } else {
+          sparkBox.classList.add("is-empty");
+        }
+      }
+    });
+  }
+
+  /* ============================================================
+     FETCH LOOP — same 60s cadence, pauses in background tabs
+     ============================================================ */
+  let timer = null;
+  let lastUpdated = null;
+
+  const load = async () => {
+    setLoading(true);
+
+    const url =
+      API +
+      "?vs_currency=usd" +
+      "&ids=" + encodeURIComponent(ids) +
+      "&order=market_cap_desc" +
+      "&sparkline=true" +
+      "&price_change_percentage=24h";
+
+    try {
+      const res = await fetch(url, { headers: { accept: "application/json" } });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) throw new Error("Empty response");
+
+      data.forEach((c) => {
+        if (!c || !c.id) return;
+        market[c.id] = {
+          usd: typeof c.current_price === "number" ? c.current_price : null,
+          chg: typeof c.price_change_percentage_24h === "number" ? c.price_change_percentage_24h : null,
+          spark: c.sparkline_in_7d && Array.isArray(c.sparkline_in_7d.price)
+            ? c.sparkline_in_7d.price : null,
+          updated: c.last_updated || null,
+        };
+      });
+
+      // Hero sparkline: the largest holding's 7-day curve, coloured by portfolio direction
+      const biggest = Object.keys(holdings)
+        .filter((id) => market[id] && market[id].spark)
+        .sort((a, b) => (holdings[b] * (market[b].usd || 0)) - (holdings[a] * (market[a].usd || 0)))[0];
+      if (biggest) {
+        heroSparkData = downsample(market[biggest].spark, 30);
+      }
+      lastUpdated = new Date();
+
+      renderPrices();
+      renderHero();
+      renderHeroSpark();
+      setStatus("Live \u00b7 updated " + lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), false);
+    } catch (err) {
+      // Deliberately leave the previous values on screen (last known good)
+      // and tell the user they are stale instead of blanking the rows.
+      setStatus("Offline \u2014 showing last known prices", true);
+      if (window.console) console.warn("CoinGecko fetch failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function renderHeroSpark() {
+    const p = computePortfolio();
+    if (!heroSparkData) { heroSpark.classList.add("is-hidden"); return; }
+    const d = sparkPath(heroSparkData, 80, 34, 3);
+    if (!d) { heroSpark.classList.add("is-hidden"); return; }
+    heroSparkPath.setAttribute("d", d);
+    heroSparkPath.setAttribute("stroke", p && p.pct < 0 ? "#F6465D" : "#3861FB");
+    heroSpark.classList.remove("is-hidden");
+  }
+
+  const schedule = () => {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+      if (!document.hidden) load();   // never poll a background tab
+    }, REFRESH_MS);
+  };
+
+  // Refresh immediately when the tab regains focus, then resume the interval.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) load();
+  });
+
+  /* ============================================================
+     EYE TOGGLE — hide / show the balance
+     ============================================================ */
+  const eyeBtn = document.getElementById("eyeBtn");
+  const eyeSlash = eyeBtn.querySelector(".eye-slash");
+
+  function applyMasked() {
+    eyeBtn.setAttribute("aria-pressed", String(masked));
+    eyeBtn.setAttribute("aria-label", masked ? "Show balance" : "Hide balance");
+    eyeSlash.style.display = masked ? "" : "none";
+    renderHero();
+  }
+
+  eyeBtn.addEventListener("click", () => {
+    masked = !masked;
+    try { window.localStorage.setItem(HIDE_KEY, JSON.stringify(masked)); } catch (e) { /* ignore */ }
+    applyMasked();
+  });
+
+  /* ============================================================
+     WATCHLIST — filter to starred coins
+     ============================================================ */
+  const watchBtn = document.getElementById("watchBtn");
+  const watchLabel = document.getElementById("watchLabel");
+  let watchlistOnly = false;
+
+  function applyWatchlist() {
+    rows.forEach((row) => {
+      const starred = watchlist.includes(row.dataset.coin);
+      const star = row.querySelector(".price__star");
+      if (star) {
+        star.classList.toggle("is-on", starred);
+        star.setAttribute("aria-pressed", String(starred));
+        star.setAttribute("aria-label",
+          (starred ? "Remove " : "Add ") + row.querySelector(".price__name").textContent + " " +
+          (starred ? "from watchlist" : "to watchlist"));
+      }
+      row.hidden = watchlistOnly && !starred;
+    });
+    watchBtn.setAttribute("aria-pressed", String(watchlistOnly));
+    watchLabel.textContent = watchlistOnly ? "Showing watchlist" : "Watchlist";
+  }
+
+  watchBtn.addEventListener("click", () => {
+    watchlistOnly = !watchlistOnly;
+    applyWatchlist();
+  });
+
+  rows.forEach((row) => {
+    const star = row.querySelector(".price__star");
+    if (!star) return;
+    star.addEventListener("click", () => {
+      const id = star.dataset.star;
+      const i = watchlist.indexOf(id);
+      if (i >= 0) watchlist.splice(i, 1); else watchlist.push(id);
+      try { window.localStorage.setItem(WATCH_KEY, JSON.stringify(watchlist)); } catch (e) { /* ignore */ }
+      applyWatchlist();
+    });
+  });
+
+  /* ============================================================
+     PROMO — 3 slides, dots, persistent dismissal
+     ============================================================ */
+  const PROMOS = [
+    {
+      title: "Become a crypto advocate",
+      text: "Learn how you can help shape pro-crypto policy",
+      badge: '<svg width="56" height="52" viewBox="0 0 56 52" fill="none"><path d="M6 18 28 4l22 14H6Z" fill="#3861FB"/><rect x="11" y="20" width="7" height="22" fill="#9AA0A6"/><rect x="24.5" y="20" width="7" height="22" fill="#9AA0A6"/><rect x="38" y="20" width="7" height="22" fill="#9AA0A6"/><rect x="6" y="43" width="44" height="6" rx="1.5" fill="#111417"/></svg>',
+    },
+    {
+      title: "Learn with Trust Sam",
+      text: "Short lessons on self-custody, keys and staying safe",
+      badge: '<svg width="52" height="52" viewBox="0 0 52 52" fill="none"><rect x="8" y="8" width="36" height="36" rx="8" fill="#3861FB"/><path d="M17 26h18M17 19h18M17 33h10" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>',
+    },
+    {
+      title: "Set price alerts",
+      text: "Get notified when coins in your watchlist move",
+      badge: '<svg width="52" height="52" viewBox="0 0 52 52" fill="none"><path d="M26 8a13 13 0 0 1 13 13c0 9-4 12-4 12H17s-4-3-4-12A13 13 0 0 1 26 8Z" fill="#3861FB"/><path d="M22 37a4.5 4.5 0 0 0 8 0" stroke="#3861FB" stroke-width="3" stroke-linecap="round"/><circle cx="26" cy="21" r="4" fill="#fff"/></svg>',
+    },
+  ];
+
+  const promo      = document.getElementById("promo");
+  const promoTitle = document.getElementById("promoTitle");
+  const promoText  = document.getElementById("promoText");
+  const promoBadge = document.getElementById("promoBadge");
+  const dots       = Array.from(document.querySelectorAll(".promo__dot"));
+
+  function showSlide(i) {
+    const p = PROMOS[i];
+    if (!p) return;
+    promoTitle.textContent = p.title;
+    promoText.textContent = p.text;
+    promoBadge.innerHTML = p.badge;
+    dots.forEach((d, j) => d.setAttribute("aria-current", String(j === i)));
+  }
+
+  dots.forEach((d) => d.addEventListener("click", () => showSlide(Number(d.dataset.slide))));
+
+  document.getElementById("promoClose").addEventListener("click", () => {
+    promo.hidden = true;
+    try { window.localStorage.setItem(PROMO_KEY, JSON.stringify(true)); } catch (e) { /* ignore */ }
+  });
+
+  if (!readJSON(PROMO_KEY, false)) {
+    promo.hidden = false;
+    showSlide(0);
+  }
+
+  /* ============================================================
+     ACTIONS + TABS — real routes where they exist, toast elsewhere
+     ============================================================ */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  document.querySelectorAll("[data-action]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const target = el.dataset.action;
+      if (target === "toast") {
+        showToast(el.querySelector(".action__label").textContent + " is coming soon.");
+        return;
+      }
+      window.location.assign(target);
+    });
+  });
+
+  document.getElementById("bellBtn").addEventListener("click", () => {
+    showToast("No new notifications.");
+  });
+
+  // Bottom tabs — visual active state, then the shared handler above
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.classList.remove("is-active");
+        t.removeAttribute("aria-current");
+      });
+      tab.classList.add("is-active");
+      tab.setAttribute("aria-current", "page");
+    });
+  });
+
+  /* ============================================================
+     SETTINGS SHEET — edit holdings, recompute instantly
+     ============================================================ */
+  const COIN_META = {
+    bitcoin:  { name: "Bitcoin",   ticker: "BTC", color: "#F7931A" },
+    ethereum: { name: "Ethereum",  ticker: "ETH", color: "#627EEA" },
+    ripple:   { name: "XRP",       ticker: "XRP", color: "#111417" },
+  };
+
+  const sheet   = document.getElementById("sheet");
+  const scrim   = document.getElementById("scrim");
+  const setBtn  = document.getElementById("settingsBtn");
+  const rowsBox = document.getElementById("holdingRows");
+
+  function buildSheet() {
+    rowsBox.innerHTML = "";
+    Object.keys(COIN_META).forEach((id) => {
+      const meta = COIN_META[id];
+      const qty = formatQty(holdings[id] || 0);
+      const live = market[id] && formatPrice(market[id].usd);
+      const row = document.createElement("div");
+      row.className = "holding";
+      row.innerHTML =
+        '<span class="holding__icon" style="background:' + meta.color + '">' + meta.ticker.slice(0, 1) + "</span>" +
+        '<span><span class="holding__name">' + meta.name + '</span>' +
+        '<div class="holding__sub">' + meta.ticker + (live ? " \u00b7 " + live : "") + "</div></span>" +
+        '<input type="text" inputmode="decimal" data-holding="' + id + '" value="' + qty + '"' +
+        ' aria-label="Amount of ' + meta.name + '" />';
+      rowsBox.appendChild(row);
+    });
+  }
+
+  function openSheet() {
+    buildSheet();
+    sheet.classList.add("is-open");
+    scrim.classList.add("is-open");
+    setBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeSheet() {
+    sheet.classList.remove("is-open");
+    scrim.classList.remove("is-open");
+    setBtn.setAttribute("aria-expanded", "false");
+  }
+
+  setBtn.addEventListener("click", openSheet);
+  document.getElementById("tabSettings").addEventListener("click", openSheet);
+  scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+
+  document.getElementById("saveHoldings").addEventListener("click", () => {
+    const next = {};
+    let valid = true;
+    rowsBox.querySelectorAll("input[data-holding]").forEach((input) => {
+      const v = Number(String(input.value).replace(/,/g, "").trim());
+      if (!Number.isFinite(v) || v < 0) {
+        valid = false;
+        input.style.borderColor = "#F6465D";
+      } else {
+        input.style.borderColor = "";
+        next[input.dataset.holding] = v;
+      }
+    });
+    if (!valid) { showToast("Amounts must be zero or positive numbers."); return; }
+
+    holdings = next;
+    try { window.localStorage.setItem(HOLDINGS_KEY, JSON.stringify(holdings)); } catch (e) { /* ignore */ }
+    renderHero();
+    closeSheet();
+    showToast("Holdings saved \u00b7 balance recalculated");
+    load();  // refresh prices right away so the new balance is live
+  });
+
+  document.getElementById("resetHoldings").addEventListener("click", () => {
+    holdings = { ...DEFAULT_HOLDINGS };
+    try { window.localStorage.removeItem(HOLDINGS_KEY); } catch (e) { /* ignore */ }
+    buildSheet();
+    renderHero();
+    showToast("Holdings reset to defaults.");
+  });
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  applyMasked();
+  applyWatchlist();
+  load();
+  schedule();
+})();
+</script>
+</body>
+</html>
