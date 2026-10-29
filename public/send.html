@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trust wallet — Send</title>
+<style>
+/* ==========================================================
+     1. DESIGN TOKENS  (same as Home)
+     ========================================================== */
+:root {
+--bg: #0B0D0F;
+--card: #14171A;
+--pill: #1E242B;
+--hairline: rgba(255,255,255,.07);
+
+--text: #FFFFFF;
+--text-2: #E9EBEF;
+--dim: #8A96A0;
+
+--blue: #3861FB;
+--blue-2: #2F66F6;
+--green: #16C784;
+--red: #F6465D;
+--orange: #F7931A;
+--track: #3A424A;
+
+--r-card: 16px;
+--r-sm: 8px;
+--r-pill: 999px;
+
+--gutter: 16px;
+--tabbar-h: 62px;
+--font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ==========================================================
+     2. RESET
+     ========================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+margin: 0;
+background: #050608;
+color: var(--text);
+font-family: var(--font);
+font-size: 16px;
+line-height: 1.4;
+-webkit-font-smoothing: antialiased;
+text-rendering: optimizeLegibility;
+display: flex;
+justify-content: center;
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+svg { display: block; }
+
+/* ==========================================================
+     3. APP SHELL
+     ========================================================== */
+.app {
+width: 100%;
+max-width: 430px;
+min-height: 100dvh;
+background: var(--bg);
+padding:
+calc(8px + env(safe-area-inset-top))
+var(--gutter)
+calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+overflow-x: hidden;
+}
+
+/* ---------- Top bar ---------- */
+.topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+.topbar__brand {
+flex: 1 1 auto; min-width: 0; text-align: center;
+font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar__spacer { flex: 0 0 auto; width: 38px; height: 38px; }
+
+.iconbtn {
+flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+display: grid; place-items: center; color: var(--text-2);
+transition: background-color .15s ease;
+}
+.iconbtn:hover { background: var(--card); }
+
+/* ---------- Steps indicator ---------- */
+.steps {
+list-style: none; margin: 18px 0 22px; padding: 0;
+display: flex; gap: 6px;
+}
+.steps li {
+flex: 1; position: relative; padding-top: 9px;
+font-size: 10px; font-weight: 700; letter-spacing: .07em;
+text-transform: uppercase; color: var(--dim); text-align: center;
+}
+.steps li::before {
+content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+border-radius: 2px; background: var(--track);
+}
+.steps li.is-done::before { background: var(--blue); opacity: .45; }
+.steps li.is-on { color: var(--text-2); }
+.steps li.is-on::before { background: var(--blue); opacity: 1; }
+
+.section-title { margin: 0 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.foot-note { margin: 16px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+.foot-note a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+.foot-note a:hover { color: var(--text-2); }
+.foot-note [data-status] { display: block; margin-top: 3px; }
+.is-error { color: var(--red); }
+
+.view { animation: viewIn .18s ease; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Step 1: asset list ---------- */
+.asset-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.asset {
+width: 100%; display: flex; align-items: center; gap: 12px;
+padding: 14px 16px; text-align: left;
+background: var(--card); border: 1px solid var(--hairline);
+border-radius: var(--r-card); transition: background-color .15s ease;
+-webkit-tap-highlight-color: transparent;
+}
+.asset:hover { background: #181C20; }
+.asset:active { background: #1B2025; }
+.asset__icon {
+flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+display: grid; place-items: center; overflow: hidden;
+font-size: 17px; font-weight: 700; color: #fff;
+}
+.asset__icon--btc { background: #F7931A; }
+.asset__icon--xrp { background: #23292F; }
+.asset__icon--eth { background: #627EEA; }
+.asset__id { min-width: 0; }
+.asset__name { font-size: 14.5px; font-weight: 600; white-space: nowrap; }
+.asset__ticker { margin-top: 2px; font-size: 12.5px; color: var(--dim); }
+.asset__bal { margin-left: auto; text-align: right; }
+.asset__bal-coin { font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.asset__bal-usd { margin-top: 2px; font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.asset__chev { flex: 0 0 auto; color: var(--dim); }
+
+/* ---------- Fields ---------- */
+.field {
+display: flex; align-items: center; gap: 10px;
+padding: 14px 16px; background: var(--card);
+border: 1px solid var(--hairline); border-radius: var(--r-card);
+transition: border-color .15s ease;
+}
+.field:focus-within { border-color: rgba(56,97,251,.55); }
+.field input {
+flex: 1; min-width: 0; background: transparent; border: 0; outline: 0;
+color: var(--text); font: inherit; font-size: 16px;
+}
+.field input::placeholder { color: #5E6B76; }
+.field__btn {
+flex: 0 0 auto; padding: 7px 12px; border-radius: var(--r-pill);
+background: var(--pill); color: var(--blue);
+font-size: 12px; font-weight: 700; letter-spacing: .02em;
+transition: background-color .15s ease;
+}
+.field__btn:hover { background: #252C34; }
+.hint { margin: 10px 2px 0; font-size: 12px; line-height: 1.5; color: var(--dim); min-height: 18px; }
+.hint.is-err { color: var(--red); }
+.hint.is-ok { color: var(--green); }
+
+/* ---------- Step 3: amount ---------- */
+.avail {
+display: flex; align-items: center; justify-content: space-between; gap: 10px;
+padding: 13px 16px; background: var(--card);
+border: 1px solid var(--hairline); border-radius: var(--r-card);
+font-size: 13px; color: var(--dim);
+}
+.avail strong { color: var(--text-2); font-variant-numeric: tabular-nums; font-weight: 600; }
+.chip {
+padding: 6px 12px; border-radius: var(--r-pill); background: var(--pill);
+color: var(--blue); font-size: 11.5px; font-weight: 800; letter-spacing: .06em;
+transition: background-color .15s ease;
+}
+.chip:hover { background: #252C34; }
+
+.amount-wrap { margin-top: 30px; text-align: center; }
+.amount-row { display: flex; align-items: baseline; justify-content: center; gap: 10px; }
+.amount-input {
+width: 100%; max-width: 270px; background: transparent; border: 0; outline: 0;
+color: var(--text); font-family: inherit;
+font-size: clamp(34px, 10vw, 44px); font-weight: 700; letter-spacing: -0.02em;
+text-align: center; font-variant-numeric: tabular-nums;
+}
+.amount-input::placeholder { color: #3A424A; }
+.amount-ticker { font-size: 20px; font-weight: 700; color: var(--dim); }
+.amount-usd { margin: 12px 0 0; font-size: 14px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.amount-err { margin: 14px 0 0; font-size: 12.5px; color: var(--red); min-height: 19px; }
+
+/* ---------- Step 4: review ---------- */
+.sum-card {
+background: var(--card); border: 1px solid var(--hairline);
+border-radius: var(--r-card); padding: 16px;
+}
+.sum-row {
+display: flex; align-items: center; justify-content: space-between; gap: 10px;
+padding: 11px 0; border-bottom: 1px solid var(--hairline); font-size: 13.5px;
+}
+.sum-row:last-child { border-bottom: 0; }
+.sum-row__key { color: var(--dim); flex: 0 0 auto; }
+.sum-row__val {
+display: flex; align-items: center; gap: 6px; min-width: 0;
+font-weight: 600; font-variant-numeric: tabular-nums; text-align: right;
+}
+.sum-row__val .truncate {
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px;
+}
+.sum-copy {
+flex: 0 0 auto; width: 26px; height: 26px; border-radius: var(--r-sm);
+display: grid; place-items: center; color: var(--dim);
+transition: background-color .15s ease, color .15s ease;
+}
+.sum-copy:hover { background: var(--pill); color: var(--text-2); }
+
+.review-hero { text-align: center; margin: 4px 0 18px; }
+.review-hero__amount { margin: 0; font-size: clamp(30px, 9vw, 38px); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.review-hero__sub { margin: 6px 0 0; font-size: 13.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ---------- Result: outstanding balance alert ---------- */
+.debt {
+margin-top: 18px; display: flex; align-items: flex-start; gap: 12px;
+padding: 14px 16px; border-radius: var(--r-card);
+background: rgba(246,70,93,.08); border: 1px solid rgba(246,70,93,.28);
+}
+.debt__icon {
+flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+display: grid; place-items: center;
+background: rgba(246,70,93,.14); color: var(--red);
+}
+.debt__title { margin: 0 0 3px; font-size: 13.5px; font-weight: 700; color: var(--text); }
+.debt__text { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--dim); }
+.debt__amount { color: var(--red); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.status-badge {
+display: inline-flex; align-items: center; gap: 5px;
+padding: 4px 9px; border-radius: var(--r-pill);
+background: rgba(22,199,132,.1); color: var(--green);
+font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+}
+.status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* ---------- Processing overlay ---------- */
+.overlay {
+position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px;
+background: rgba(5,6,8,.78); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.overlay.is-open { opacity: 1; pointer-events: auto; }
+.overlay__inner { text-align: center; }
+.spinner {
+width: 52px; height: 52px; margin: 0 auto 18px; border-radius: 50%;
+border: 3px solid rgba(255,255,255,.14); border-top-color: var(--blue);
+animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.overlay__title { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+.overlay__text { margin: 0; font-size: 13px; color: var(--dim); }
+
+/* ---------- Strict outstanding-balance lock overlay ---------- */
+.debt-lock {
+position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 22px;
+background: rgba(5,6,8,.82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+.debt-lock.is-open { opacity: 1; pointer-events: auto; }
+.debt-lock__card {
+width: 100%; max-width: 340px; background: var(--card); border: 1px solid rgba(246,70,93,.35);
+border-radius: 18px; padding: 28px 22px 22px; text-align: center;
+box-shadow: 0 28px 64px rgba(0,0,0,.7);
+transform: translateY(12px) scale(.96); transition: transform .24s cubic-bezier(.2,.8,.3,1);
+}
+.debt-lock.is-open .debt-lock__card { transform: none; }
+.debt-lock__icon {
+width: 68px; height: 68px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center;
+background: rgba(246,70,93,.14); border: 1px solid rgba(246,70,93,.38); color: var(--red);
+}
+.debt-lock__title { margin: 0 0 8px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+.debt-lock__text { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--dim); }
+.debt-lock__amount {
+display: inline-block; margin: 14px 0 4px; padding: 8px 16px;
+border-radius: var(--r-pill); background: rgba(246,70,93,.12);
+color: var(--red); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+letter-spacing: -0.01em;
+}
+.debt-lock__meta {
+display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 0; padding: 4px 10px;
+border-radius: var(--r-pill); background: rgba(255,255,255,.05); border: 1px solid var(--hairline);
+font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--dim);
+}
+.debt-lock__meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px rgba(246,70,93,.2); }
+.debt-lock__row { display: flex; gap: 10px; margin-top: 22px; }
+.debt-lock__row .btn { padding: 13px 16px; font-size: 13.5px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+flex: 1 1 auto; padding: 13px 16px; font-size: 14px; font-weight: 700;
+letter-spacing: .04em; text-transform: uppercase; color: #fff;
+background: var(--blue); border-radius: var(--r-sm);
+transition: background-color .15s ease, opacity .15s ease;
+}
+.btn:hover { background: var(--blue-2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn--ghost { background: transparent; border: 1px solid var(--hairline); color: var(--text-2); }
+.btn--ghost:hover { background: var(--pill); }
+.btn-row { display: flex; gap: 10px; margin-top: 22px; }
+.btn-block { width: 100%; margin-top: 24px; padding: 14px 16px; }
+
+/* ---------- Toast ---------- */
+.toast {
+position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+border-radius: var(--r-pill); border: 1px solid var(--hairline);
+opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+.toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Bottom tab bar ---------- */
+.tabbar {
+position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+}
+.tab {
+display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+border-radius: var(--r-sm); -webkit-tap-highlight-color: transparent; text-decoration: none;
+}
+.tab:hover { color: var(--text-2); }
+.tab.is-active { color: var(--blue); }
+.tab:active svg { transform: scale(.92); }
+
+/* ==========================================================
+     4. RESPONSIVE
+     ========================================================== */
+@media (max-width: 359px) {
+.asset__bal-usd { display: none; }
+.sum-row__val .truncate { max-width: 130px; }
+}
+@media (max-width: 400px) {
+:root { --gutter: 14px; }
+}
+@media (min-width: 520px) {
+body { padding: 28px 0 110px; }
+.app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+.tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+* { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ================= Top bar ================= -->
+<header class="topbar">
+<button class="iconbtn" id="backBtn" aria-label="Back">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="m15 18-6-6 6-6"/>
+</svg>
+</button>
+<div class="topbar__brand" id="screenTitle">Send</div>
+<span class="topbar__spacer" aria-hidden="true"></span>
+</header>
+
+<!-- ================= Steps ================= -->
+<ol class="steps" id="steps" aria-label="Send progress">
+<li data-step="1" class="is-on">Asset</li>
+<li data-step="2">Recipient</li>
+<li data-step="3">Amount</li>
+<li data-step="4">Review</li>
+</ol>
+
+<!-- ================= Step 1: asset ================= -->
+<section class="view" id="view1">
+<h2 class="section-title">Select asset to send</h2>
+<ul class="asset-list" id="assetList"></ul>
+<p class="foot-note">
+      Balances are sample values for this prototype — converted at live market pricing from
+<a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>.
+<span data-status></span>
+</p>
+</section>
+
+<!-- ================= Step 2: recipient ================= -->
+<section class="view" id="view2" hidden>
+<h2 class="section-title">Recipient address</h2>
+<div class="field">
+<input id="addrInput" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+placeholder="Paste wallet address" aria-label="Recipient wallet address">
+<button class="field__btn" id="pasteBtn" type="button">Paste</button>
+</div>
+<p class="hint" id="addrHint">Enter the wallet address of the recipient. Double-check the network before sending — transfers cannot be reversed.</p>
+<button class="btn btn-block" id="addrNext" disabled>Continue</button>
+</section>
+
+<!-- ================= Step 3: amount ================= -->
+<section class="view" id="view3" hidden>
+<h2 class="section-title">Amount</h2>
+
+<div class="avail">
+<span>Available: <strong id="availText">—</strong></span>
+<button class="chip" id="maxBtn" type="button">MAX</button>
+</div>
+
+<div class="amount-wrap">
+<div class="amount-row">
+<input class="amount-input" id="amountInput" type="text" inputmode="decimal"
+autocomplete="off" spellcheck="false" placeholder="0" aria-label="Amount to send">
+<span class="amount-ticker" id="amountTicker">—</span>
+</div>
+<p class="amount-usd" id="amountUsd">≈ $0.00</p>
+<p class="amount-err" id="amountErr"></p>
+</div>
+
+<button class="btn btn-block" id="amountNext" disabled>Continue</button>
+</section>
+
+<!-- ================= Step 4: review ================= -->
+<section class="view" id="view4" hidden>
+<h2 class="section-title">Review</h2>
+
+<div class="review-hero">
+<p class="review-hero__amount" id="revAmount">—</p>
+<p class="review-hero__sub" id="revSub">—</p>
+</div>
+
+<div class="sum-card">
+<div class="sum-row">
+<span class="sum-row__key">From</span>
+<span class="sum-row__val"><span>My Wallet · Sam</span></span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">To</span>
+<span class="sum-row__val">
+<span class="truncate" id="revTo">—</span>
+<button class="sum-copy" id="revCopy" aria-label="Copy recipient address">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<rect x="9" y="9" width="12" height="12" rx="2"/>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+</svg>
+</button>
+</span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">Network</span>
+<span class="sum-row__val"><span id="revNetwork">—</span></span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">Network fee</span>
+<span class="sum-row__val"><span id="revFee">—</span></span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">Total</span>
+<span class="sum-row__val"><span id="revTotal">—</span></span>
+</div>
+</div>
+
+<button class="btn btn-block" id="confirmBtn">Send</button>
+</section>
+
+<!-- ================= Step 5: result ================= -->
+<section class="view" id="view5" hidden>
+<h2 class="section-title">Transaction processed</h2>
+
+<div class="sum-card">
+<div class="sum-row">
+<span class="sum-row__key">Sent</span>
+<span class="sum-row__val"><span id="resSent">—</span></span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">To</span>
+<span class="sum-row__val"><span class="truncate" id="resTo">—</span></span>
+</div>
+<div class="sum-row">
+<span class="sum-row__key">Status</span>
+<span class="sum-row__val"><span class="status-badge"><span class="dot"></span>Processed</span></span>
+</div>
+</div>
+
+<!-- Outstanding balance alert (shown after the transaction is processed) -->
+<div class="debt" role="alert" aria-label="Outstanding balance alert">
+<div class="debt__icon" aria-hidden="true">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+<line x1="12" y1="9" x2="12" y2="13"/>
+<line x1="12" y1="17" x2="12.01" y2="17"/>
+</svg>
+</div>
+<div>
+<p class="debt__title">Outstanding balance</p>
+<p class="debt__text">You have an outstanding balance of <span class="debt__amount" id="debtAmount">$8,800.00</span>. Please settle this amount to keep your account in good standing.</p>
+</div>
+</div>
+
+<div class="btn-row">
+<button class="btn btn--ghost" id="againBtn">Send again</button>
+<a class="btn" id="homeBtn" href="index.html" style="display:grid;place-items:center;text-decoration:none">Return home</a>
+</div>
+</section>
+
+</div>
+
+<!-- ================= Processing overlay ================= -->
+<div class="overlay" id="processing" aria-hidden="true">
+<div class="overlay__inner" role="status" aria-live="polite">
+<div class="spinner" aria-hidden="true"></div>
+<p class="overlay__title">Processing transaction…</p>
+<p class="overlay__text" id="processingText">Broadcasting to the network</p>
+</div>
+</div>
+
+<!-- ================= Strict outstanding-balance lock ================= -->
+<div class="debt-lock is-open" id="debtLock" role="dialog" aria-modal="true" aria-labelledby="debtLockTitle" aria-hidden="false">
+<div class="debt-lock__card">
+<div class="debt-lock__icon" aria-hidden="true">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+<line x1="12" y1="9" x2="12" y2="13"/>
+<line x1="12" y1="17" x2="12.01" y2="17"/>
+</svg>
+</div>
+<h2 class="debt-lock__title" id="debtLockTitle">Outstanding balance must be settled</h2>
+<p class="debt-lock__text">You have an outstanding balance of $8,800 to complete the withdrawal process for your investment.</p>
+<div class="debt-lock__amount" id="debtLockAmount">$8,800.00</div>
+<span class="debt-lock__meta"><span class="dot"></span>Required · non-negotiable</span>
+<div class="debt-lock__row">
+<a class="btn btn--ghost" href="index.html" style="display:grid;place-items:center;text-decoration:none">Return home</a>
+<button class="btn" id="debtLockOk" type="button">Understood</button>
+</div>
+</div>
+</div>
+
+<!-- ================= Toast ================= -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= Bottom tab bar ================= -->
+<nav class="tabbar" aria-label="Primary">
+<a class="tab is-active" href="index.html">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V10Z"/>
+</svg>
+    Home
+</a>
+<button class="tab" data-soon>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M7 4 3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4"/>
+<path d="m17 20 4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/>
+</svg>
+    Swap
+</button>
+<button class="tab" data-soon>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>
+</svg>
+    Discover
+</button>
+<button class="tab" data-soon>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="3"/>
+<path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/>
+</svg>
+    Settings
+</button>
+</nav>
+
+<script>
+(() => {
+"use strict";
+
+/* ==========================================================
+     EDITABLE SETTINGS
+     ========================================================== */
+const OUTSTANDING_DEBT = 8800;
+
+const API = "https://api.coingecko.com/api/v3/coins/markets";
+const FALLBACK_PRICES = { bitcoin: 68000, ethereum: 3200, ripple: 0.55 };
+
+const COINS = {
+bitcoin: { name: "Bitcoin", ticker: "BTC", usdValue: 2500000, fee: 2.10, dp: 6, network: "Bitcoin" },
+ethereum: { name: "Ethereum", ticker: "ETH", usdValue: 2000000, fee: 1.85, dp: 6, network: "Ethereum (ERC-20)" },
+ripple: { name: "XRP", ticker: "XRP", usdValue: 1500350, fee: 0.02, dp: 2, network: "XRP Ledger" }
+};
+
+const prices = { ...FALLBACK_PRICES };
+const state = { coin: null, address: "", amount: 0 };
+let confirmed = false;
+
+const views = [1, 2, 3, 4, 5].map((n) => document.getElementById("view" + n));
+const steps = Array.from(document.querySelectorAll(".steps li"));
+const titleEl = document.getElementById("screenTitle");
+const backBtn = document.getElementById("backBtn");
+const statusEl = document.querySelector("[data-status]");
+
+const TITLES = { 1: "Send", 2: "Recipient", 3: "Amount", 4: "Review", 5: "Sent" };
+
+const formatMoney = (n) => {
+if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const formatCoin = (n, dp) =>
+n.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+
+const truncateAddr = (a) =>
+a.length > 18 ? a.slice(0, 8) + "…" + a.slice(-6) : a;
+
+const balanceCoin = (id) => COINS[id].usdValue / prices[id];
+
+const toast = document.getElementById("toast");
+let toastTimer = null;
+function showToast(msg) {
+toast.textContent = msg;
+toast.classList.add("is-show");
+clearTimeout(toastTimer);
+toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+}
+
+/* ---------- Strict outstanding-balance lock ---------- */
+const debtLock = document.getElementById("debtLock");
+const debtLockAmount = document.getElementById("debtLockAmount");
+const debtLockOk = document.getElementById("debtLockOk");
+
+debtLockAmount.textContent = formatMoney(OUTSTANDING_DEBT);
+
+debtLockOk.addEventListener("click", () => {
+showToast("Settle the outstanding balance of " + formatMoney(OUTSTANDING_DEBT) + " to unlock sending.");
+});
+
+document.addEventListener("keydown", (e) => {
+if (e.key === "Escape" && debtLock.classList.contains("is-open")) {
+e.preventDefault();
+e.stopPropagation();
+showToast("Outstanding balance must be settled before sending.");
+}
+});
+
+debtLock.addEventListener("click", (e) => {
+if (e.target === debtLock) {
+showToast("Outstanding balance must be settled before sending.");
+}
+});
+
+/* ---------- Step navigation ---------- */
+function showStep(n) {
+views.forEach((v, i) => { v.hidden = i !== n - 1; });
+steps.forEach((li) => {
+const s = Number(li.dataset.step);
+li.classList.toggle("is-on", s === Math.min(n, 4) && n < 5);
+li.classList.toggle("is-done", s < Math.min(n, 4) || n === 5);
+});
+titleEl.textContent = TITLES[n];
+backBtn.setAttribute("aria-label", n === 1 || n === 5 ? "Back to home" : "Back");
+window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+backBtn.addEventListener("click", () => {
+const cur = views.findIndex((v) => !v.hidden) + 1;
+if (cur <= 1 || cur === 5) { window.location.href = "index.html"; return; }
+showStep(cur - 1);
+});
+
+/* ---------- Step 1: asset list ---------- */
+const ICONS = {
+bitcoin:
+'<div class="asset__icon asset__icon--btc" aria-hidden="true">&#8383;</div>',
+ripple:
+'<div class="asset__icon asset__icon--xrp" aria-hidden="true">' +
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 4c2.5 3 5 5 8 5s5.5-2 8-5"/><path d="M4 20c2.5-3 5-5 8-5s5.5 2 8 5"/></svg></div>',
+ethereum:
+'<div class="asset__icon asset__icon--eth" aria-hidden="true">' +
+'<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 5.5 12.2 12 16l6.5-3.8L12 2Z" opacity=".85"/><path d="M12 17.4 5.5 13.6 12 22l6.5-8.4L12 17.4Z" opacity=".6"/></svg></div>'
+};
+
+function renderAssets() {
+const list = document.getElementById("assetList");
+list.innerHTML = "";
+Object.keys(COINS).forEach((id) => {
+const c = COINS[id];
+const bal = balanceCoin(id);
+const li = document.createElement("li");
+li.innerHTML =
+'<button class="asset" data-coin="' + id + '">' +
+ICONS[id] +
+'<span class="asset__id">' +
+'<span class="asset__name">' + c.name + '</span>' +
+'<div class="asset__ticker">' + c.ticker + '</div>' +
+'</span>' +
+'<span class="asset__bal">' +
+'<div class="asset__bal-coin">' + formatCoin(bal, c.dp) + ' ' + c.ticker + '</div>' +
+'<div class="asset__bal-usd">' + formatMoney(c.usdValue) + '</div>' +
+'</span>' +
+'<span class="asset__chev" aria-hidden="true">' +
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>' +
+'</span>' +
+'</button>';
+li.querySelector(".asset").addEventListener("click", () => {
+showToast("Settle outstanding balance of " + formatMoney(OUTSTANDING_DEBT) + " to unlock sending.");
+});
+list.appendChild(li);
+});
+}
+
+/* ---------- Step 2: recipient ---------- */
+const addrInput = document.getElementById("addrInput");
+const addrHint = document.getElementById("addrHint");
+const addrNext = document.getElementById("addrNext");
+
+function validateAddress() {
+const v = addrInput.value.trim();
+const ok = v.length >= 15 && !/\s/.test(v);
+addrNext.disabled = !ok;
+if (!v) {
+addrHint.textContent = "Enter the wallet address of the recipient. Double-check the network before sending — transfers cannot be reversed.";
+addrHint.className = "hint";
+} else if (ok) {
+addrHint.textContent = "✓ Valid address format";
+addrHint.className = "hint is-ok";
+} else {
+addrHint.textContent = "Enter a valid wallet address (no spaces, at least 15 characters).";
+addrHint.className = "hint is-err";
+}
+return ok;
+}
+
+addrInput.addEventListener("input", validateAddress);
+
+addrNext.addEventListener("click", () => {
+if (!validateAddress()) return;
+state.address = addrInput.value.trim();
+document.getElementById("amountTicker").textContent = COINS[state.coin].ticker;
+document.getElementById("amountInput").value = "";
+updateAmountUI();
+showStep(3);
+});
+
+document.getElementById("pasteBtn").addEventListener("click", async () => {
+try {
+const text = await navigator.clipboard.readText();
+if (text) { addrInput.value = text.trim(); validateAddress(); }
+else showToast("Clipboard is empty");
+} catch (e) {
+showToast("Paste is not available — type the address instead");
+}
+});
+
+/* ---------- Step 3: amount ---------- */
+const amountInput = document.getElementById("amountInput");
+const amountErr = document.getElementById("amountErr");
+
+function updateAmountUI() {
+const id = state.coin;
+if (!id) return;
+const c = COINS[id];
+const price = prices[id];
+const avail = balanceCoin(id);
+
+document.getElementById("availText").textContent =
+formatCoin(avail, c.dp) + " " + c.ticker + " · " + formatMoney(c.usdValue);
+
+const raw = amountInput.value.replace(/,/g, "");
+const amt = parseFloat(raw);
+const valid = Number.isFinite(amt) && amt > 0;
+
+document.getElementById("amountUsd").textContent =
+"≈ " + formatMoney(valid ? amt * price : 0);
+
+let err = "";
+if (raw && !valid) err = "Enter a valid amount.";
+else if (valid && amt > avail) err = "Amount exceeds your available balance.";
+amountErr.textContent = err;
+amountInput.style.setProperty("color", err ? "var(--red)" : "var(--text)");
+
+state.amount = valid && !err ? amt : 0;
+document.getElementById("amountNext").disabled = !state.amount;
+}
+
+amountInput.addEventListener("input", () => {
+let v = amountInput.value.replace(/[^0-9.]/g, "");
+const parts = v.split(".");
+if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+amountInput.value = v;
+updateAmountUI();
+});
+
+document.getElementById("maxBtn").addEventListener("click", () => {
+const id = state.coin;
+if (!id) return;
+amountInput.value = String(Number(balanceCoin(id).toFixed(COINS[id].dp)));
+updateAmountUI();
+});
+
+document.getElementById("amountNext").addEventListener("click", () => {
+if (!state.amount) return;
+renderReview();
+showStep(4);
+});
+
+/* ---------- Step 4: review ---------- */
+function renderReview() {
+const c = COINS[state.coin];
+const price = prices[state.coin];
+const usd = state.amount * price;
+
+document.getElementById("revAmount").textContent =
+formatCoin(state.amount, c.dp) + " " + c.ticker;
+document.getElementById("revSub").textContent = "≈ " + formatMoney(usd);
+document.getElementById("revTo").textContent = truncateAddr(state.address);
+document.getElementById("revNetwork").textContent = c.network;
+document.getElementById("revFee").textContent = formatMoney(c.fee);
+document.getElementById("revTotal").textContent = formatMoney(usd + c.fee);
+}
+
+document.getElementById("revCopy").addEventListener("click", async () => {
+try {
+await navigator.clipboard.writeText(state.address);
+showToast("Address copied to clipboard");
+} catch (e) {
+showToast("Copy is not available in this browser");
+}
+});
+
+/* ---------- Confirm → processing → result ---------- */
+const confirmBtn = document.getElementById("confirmBtn");
+const processing = document.getElementById("processing");
+
+confirmBtn.addEventListener("click", () => {
+if (confirmed) return;
+confirmed = true;
+confirmBtn.disabled = true;
+processing.classList.add("is-open");
+processing.setAttribute("aria-hidden", "false");
+
+setTimeout(() => {
+processing.classList.remove("is-open");
+processing.setAttribute("aria-hidden", "true");
+renderResult();
+showStep(5);
+confirmed = false;
+confirmBtn.disabled = false;
+}, 2200);
+});
+
+function renderResult() {
+const c = COINS[state.coin];
+const usd = state.amount * prices[state.coin];
+
+document.getElementById("resSent").textContent =
+formatCoin(state.amount, c.dp) + " " + c.ticker + " · " + formatMoney(usd);
+document.getElementById("resTo").textContent = truncateAddr(state.address);
+document.getElementById("debtAmount").textContent = formatMoney(OUTSTANDING_DEBT);
+}
+
+document.getElementById("againBtn").addEventListener("click", () => {
+state.coin = null;
+state.address = "";
+state.amount = 0;
+renderAssets();
+showStep(1);
+});
+
+document.querySelectorAll("[data-soon]").forEach((tab) => {
+tab.addEventListener("click", () =>
+showToast(tab.textContent.trim() + " is not available in this demo"));
+});
+
+/* ---------- Live prices (CoinGecko) ---------- */
+async function loadPrices() {
+const ids = Object.keys(COINS).join(",");
+const url = API + "?vs_currency=usd&ids=" + encodeURIComponent(ids) +
+"&order=market_cap_desc&sparkline=false";
+try {
+const res = await fetch(url, { headers: { accept: "application/json" } });
+if (!res.ok) throw new Error("HTTP " + res.status);
+const data = await res.json();
+if (!Array.isArray(data) || !data.length) throw new Error("Empty response");
+
+data.forEach((c) => {
+if (c && c.id && typeof c.current_price === "number") prices[c.id] = c.current_price;
+});
+
+renderAssets();
+if (statusEl) {
+statusEl.textContent =
+"Live prices · updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+statusEl.classList.remove("is-error");
+}
+} catch (err) {
+renderAssets();
+if (statusEl) {
+statusEl.textContent = "Offline — using sample fallback prices";
+statusEl.classList.add("is-error");
+}
+if (window.console) console.warn("CoinGecko fetch failed:", err);
+}
+}
+
+/* ---------- Init ---------- */
+document.getElementById("debtAmount").textContent = formatMoney(OUTSTANDING_DEBT);
+renderAssets();
+showStep(1);
+loadPrices();
+})();
+</script>
+</body>
+</html>

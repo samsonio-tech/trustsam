@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trust wallet — Home</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .avatar {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-pill);
+    background: var(--blue); color: #fff; font-size: 14px; font-weight: 700;
+    display: grid; place-items: center; text-decoration: none; letter-spacing: .02em;
+  }
+  .avatar:hover { background: var(--blue-2); }
+
+  .topbar__brand {
+    flex: 1 1 auto; min-width: 0; font-size: 16px; font-weight: 700;
+    letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .iconbtn {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .iconbtn:hover { background: var(--card); }
+  .iconbtn[aria-pressed="true"] { color: var(--blue); background: var(--card); }
+
+  /* ---------- Welcome ---------- */
+  .welcome { margin-top: 16px; }
+  .welcome__text {
+    margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--text-2);
+  }
+  .welcome__name { color: var(--blue); font-weight: 700; }
+
+  /* ---------- Hero ---------- */
+  .hero { margin-top: 18px; }
+  .hero__label { margin: 0; font-size: 13px; font-weight: 500; color: var(--dim); }
+  .hero__amount {
+    margin: 6px 0 0; font-size: clamp(30px, 9vw, 38px); font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.05; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero__amount.is-masked { letter-spacing: .08em; color: var(--text-2); }
+  .hero__note { margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--dim); }
+
+  /* ---------- Debt alert ---------- */
+  .debt {
+    margin-top: 18px; display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: var(--r-card);
+    background: rgba(246,70,93,.08); border: 1px solid rgba(246,70,93,.28);
+  }
+  .debt__icon {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(246,70,93,.14); color: var(--red);
+  }
+  .debt__title { margin: 0 0 3px; font-size: 13.5px; font-weight: 700; color: var(--text); }
+  .debt__text { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--dim); }
+  .debt__amount { color: var(--red); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Linked bank ---------- */
+  .banks { margin-top: 16px; }
+  .banks__toggle {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: var(--card);
+    border: 1px solid var(--hairline); border-radius: var(--r-card);
+    transition: background-color .15s ease; text-align: left;
+  }
+  .banks__toggle:hover { background: #181C20; }
+  .banks__icon {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px;
+    display: grid; place-items: center; background: var(--pill); color: var(--blue);
+  }
+  .banks__meta { min-width: 0; }
+  .banks__label { font-size: 14.5px; font-weight: 600; color: var(--text); }
+  .banks__sub { margin-top: 2px; font-size: 12px; color: var(--dim); }
+  .banks__count {
+    margin-left: auto; flex: 0 0 auto; min-width: 22px; height: 22px; padding: 0 7px;
+    border-radius: var(--r-pill); display: grid; place-items: center;
+    background: var(--pill); color: var(--text-2); font-size: 11.5px; font-weight: 700;
+  }
+  .banks__chev { flex: 0 0 auto; color: var(--dim); transition: transform .18s ease; }
+  .banks__toggle[aria-expanded="true"] .banks__chev { transform: rotate(180deg); }
+
+  .banks__panel { margin-top: 10px; display: grid; gap: 10px; }
+  .banks__panel[hidden] { display: none; }
+
+  .bank-card {
+    background: var(--card); border: 1px solid var(--hairline);
+    border-radius: var(--r-card); padding: 16px;
+  }
+  .bank-card__head { display: flex; align-items: center; gap: 10px; }
+  .bank-card__logo {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px;
+    display: grid; place-items: center; background: var(--pill); color: var(--blue);
+    font-size: 13px; font-weight: 800; letter-spacing: .02em;
+  }
+  .bank-card__name { min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .bank-card__badge {
+    margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: var(--r-pill);
+    background: rgba(22,199,132,.1); color: var(--green);
+    font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .bank-card__badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .bank-rows { margin-top: 12px; }
+  .bank-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--hairline); font-size: 13px;
+  }
+  .bank-row:last-child { border-bottom: 0; }
+  .bank-row__key { color: var(--dim); flex: 0 0 auto; }
+  .bank-row__valwrap { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .bank-row__val {
+    font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bank-copy {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: var(--r-sm);
+    display: grid; place-items: center; color: var(--dim);
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .bank-copy:hover { background: var(--pill); color: var(--text-2); }
+
+  .bank-card__status {
+    margin-top: 12px; display: flex; align-items: flex-start; gap: 8px;
+    padding: 10px 12px; border-radius: var(--r-sm);
+    background: rgba(22,199,132,.06); border: 1px solid rgba(22,199,132,.18);
+    font-size: 12px; line-height: 1.45; color: var(--dim);
+  }
+  .bank-card__status svg { flex: 0 0 auto; color: var(--green); margin-top: 1px; }
+  .bank-card__status strong { color: var(--text-2); font-weight: 600; }
+
+  /* ---------- Action grid ---------- */
+  .actions {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    column-gap: 6px; row-gap: 24px; margin-top: 26px;
+  }
+  .action {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 0; -webkit-tap-highlight-color: transparent;
+  }
+  .action__icon {
+    width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+    transition: transform .12s ease, background-color .15s ease;
+  }
+  .action--solid .action__icon { background: var(--blue); }
+  .action--solid:hover .action__icon { background: var(--blue-2); }
+  .action:active .action__icon { transform: scale(.94); }
+  .action__label {
+    font-size: 11.5px; font-weight: 500; line-height: 1.28; text-align: center;
+    color: var(--text-2); max-width: 78px;
+  }
+
+  /* ---------- Promo ---------- */
+  .promo { position: relative; margin-top: 30px; padding: 18px; background: var(--card); border-radius: var(--r-card); }
+  .promo[hidden] { display: none; }
+  .promo__dots { display: flex; gap: 6px; }
+  .promo__dot {
+    width: 22px; height: 3px; padding: 0; border-radius: 2px;
+    background: rgba(255,255,255,.22); transition: background-color .15s ease;
+  }
+  .promo__dot[aria-current="true"] { background: #fff; }
+  .promo__close { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
+  .promo__close:hover { background: rgba(255,255,255,.08); }
+  .promo__inner { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; margin-top: 16px; }
+  .promo__title { margin: 0 0 6px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .promo__text { margin: 0; max-width: 210px; font-size: 13.5px; line-height: 1.45; color: var(--dim); }
+  .promo__badge { width: 92px; height: 92px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: 0 0 auto; font-size: 34px; }
+
+  /* ---------- Prices ---------- */
+  .prices { margin-top: 30px; }
+  .prices__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .prices__title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px;
+    border-radius: var(--r-pill); background: var(--pill); color: var(--text-2);
+    font-size: 13px; font-weight: 600; transition: background-color .15s ease;
+  }
+  .pill:hover { background: #252C34; }
+  .pill[aria-pressed="true"] { background: var(--blue); color: #fff; }
+  .pill[aria-pressed="true"] .pill__chev { stroke: #fff; }
+
+  .price-list { list-style: none; margin: 0; padding: 0; }
+  .price {
+    display: grid; grid-template-columns: 40px auto minmax(0, 1fr) auto;
+    align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--hairline);
+  }
+  .price[hidden] { display: none; }
+  .price:last-child { border-bottom: 0; }
+  .price__icon {
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    overflow: hidden; font-size: 18px; font-weight: 700; color: #fff;
+  }
+  .price__icon--btc { background: #F7931A; }
+  .price__icon--xrp { background: #23292F; }
+  .price__icon--eth { background: #627EEA; }
+  .price__id { min-width: 0; display: flex; align-items: center; gap: 7px; }
+  .price__name { font-size: 14.5px; font-weight: 600; white-space: nowrap; }
+  .price__ticker { margin-top: 2px; font-size: 12.5px; color: var(--dim); }
+  .price__star { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: var(--track); }
+  .price__star:hover { background: var(--pill); }
+  .price__star.is-on { color: #F5B32F; }
+  .price__spark { justify-self: center; width: 100%; max-width: 118px; }
+  .price__spark svg { width: 100%; height: 24px; }
+  .price__spark.is-empty { visibility: hidden; }
+  .price__right { text-align: right; white-space: nowrap; justify-self: end; }
+  .price__value { font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .price__change {
+    display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+    margin-top: 3px; font-size: 13px; font-weight: 500; color: var(--green);
+    transition: color .2s ease;
+  }
+  .price__change[hidden] { display: none; }
+  .price__change--down { color: var(--red); }
+  .price__change--down .price__change-arrow { transform: rotate(180deg); }
+  .price__value.is-loading, .price__change.is-loading { opacity: .4; }
+  .prices__foot { margin: 14px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+  .prices__foot a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+  .prices__foot a:hover { color: var(--text-2); }
+  .prices__foot [data-status] { display: block; margin-top: 3px; }
+  .is-error { color: var(--red); }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+    color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ---------- Maintenance overlay ---------- */
+  .maint {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px;
+    background: rgba(5,6,8,.74); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .maint.is-open { opacity: 1; pointer-events: auto; }
+  .maint__card {
+    width: 100%; max-width: 336px; background: var(--card); border: 1px solid var(--hairline);
+    border-radius: 18px; padding: 26px 22px 20px; text-align: center;
+    box-shadow: 0 26px 60px rgba(0,0,0,.65);
+    transform: translateY(10px) scale(.97); transition: transform .22s cubic-bezier(.2,.8,.3,1);
+  }
+  .maint.is-open .maint__card { transform: none; }
+  .maint__icon {
+    width: 66px; height: 66px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(246,70,93,.12); border: 1px solid rgba(246,70,93,.32); color: var(--red);
+  }
+  .maint__title { margin: 0 0 8px; font-size: 17.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .maint__text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+  .maint__meta {
+    display: inline-flex; align-items: center; gap: 6px; margin: 14px 0 0; padding: 4px 10px;
+    border-radius: var(--r-pill); background: rgba(255,255,255,.05); border: 1px solid var(--hairline);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--dim);
+  }
+  .maint__meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px rgba(246,70,93,.18); }
+  .maint__row { display: flex; gap: 9px; margin-top: 20px; }
+  .maint__row .btn { padding: 11px 14px; font-size: 13px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    flex: 1 1 auto; padding: 12px 16px; font-size: 14px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; color: #fff;
+    background: var(--blue); border-radius: var(--r-sm); transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn--ghost { background: transparent; border: 1px solid var(--hairline); color: var(--text-2); }
+  .btn--ghost:hover { background: var(--pill); }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+    padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ==========================================================
+     4. RESPONSIVE
+     ========================================================== */
+  @media (max-width: 359px) {
+    .price { grid-template-columns: 38px auto minmax(0, 1fr); gap: 10px; }
+    .price__spark { display: none; }
+    .action__label { font-size: 11px; }
+    .price__star { display: none; }
+    .bank-row__val { font-size: 12px; }
+  }
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+    .promo__badge { width: 78px; height: 78px; }
+    .promo__text { max-width: 180px; }
+  }
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+    .tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= Top bar ================= -->
+  <header class="topbar">
+    <a class="avatar" href="#" aria-label="Profile">TS</a>
+    <div class="topbar__brand">Trust wallet</div>
+
+    <button class="iconbtn" id="bellBtn" aria-label="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+      </svg>
+    </button>
+
+    <button class="iconbtn" id="eyeBtn" aria-pressed="false" aria-label="Hide balance">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line class="eye-slash" x1="4" y1="20" x2="20" y2="4" style="display:none"/>
+      </svg>
+    </button>
+
+    <button class="iconbtn" id="settingsBtn" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ================= Welcome ================= -->
+  <section class="welcome" aria-label="Welcome">
+    <h2 class="welcome__text">Welcome back, <span class="welcome__name" id="userName">Sam</span>!</h2>
+  </section>
+
+  <!-- ================= Hero / balance ================= -->
+  <section class="hero">
+    <p class="hero__label">Portfolio balance</p>
+    <h1 class="hero__amount" id="balanceAmount">$6,000,350.00</h1>
+    <p class="hero__note">Sample balance for tracking — connected to live market pricing.</p>
+  </section>
+
+  <!-- ================= Debt alert ================= -->
+  <section class="debt" role="alert" aria-label="Outstanding balance alert">
+    <div class="debt__icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div>
+      <p class="debt__title">Outstanding balance</p>
+      <p class="debt__text">You have an outstanding balance of <span class="debt__amount" id="debtAmount">$8,800.00</span>. Please settle this amount to keep your account in good standing.</p>
+    </div>
+  </section>
+
+  <!-- ================= Linked bank ================= -->
+  <section class="banks" aria-label="Linked bank">
+    <button class="banks__toggle" id="banksToggle" aria-expanded="false" aria-controls="banksPanel">
+      <span class="banks__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18"/>
+          <path d="M4 18h16"/>
+          <path d="M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/>
+          <path d="M3 8 12 3l9 5Z"/>
+        </svg>
+      </span>
+      <span class="banks__meta">
+        <span class="banks__label">Linked bank</span>
+        <div class="banks__sub">2 accounts linked to this wallet</div>
+      </span>
+      <span class="banks__count">2</span>
+      <span class="banks__chev" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </span>
+    </button>
+
+    <div class="banks__panel" id="banksPanel" hidden>
+
+      <!-- Bank 1 -->
+      <article class="bank-card">
+        <div class="bank-card__head">
+          <span class="bank-card__logo" aria-hidden="true">FH</span>
+          <h3 class="bank-card__name">FIRST HAWAIIAN BANK</h3>
+          <span class="bank-card__badge"><span class="dot"></span>Linked</span>
+        </div>
+        <div class="bank-rows">
+          <div class="bank-row">
+            <span class="bank-row__key">Account Number</span>
+            <span class="bank-row__valwrap">
+              <span class="bank-row__val">0090903548</span>
+              <button class="bank-copy" data-copy="0090903548" aria-label="Copy account number">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-row__key">Routing Number</span>
+            <span class="bank-row__valwrap">
+              <span class="bank-row__val">121301015</span>
+              <button class="bank-copy" data-copy="121301015" aria-label="Copy routing number">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+        </div>
+        <p class="bank-card__status">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <span><strong>First Hawaiian Bank</strong> is linked to this wallet and verified for transfers.</span>
+        </p>
+      </article>
+
+      <!-- Bank 2 -->
+      <article class="bank-card">
+        <div class="bank-card__head">
+          <span class="bank-card__logo" aria-hidden="true">HC</span>
+          <h3 class="bank-card__name">Hawaii Community Federal Credit Union</h3>
+          <span class="bank-card__badge"><span class="dot"></span>Linked</span>
+        </div>
+        <div class="bank-rows">
+          <div class="bank-row">
+            <span class="bank-row__key">Checking</span>
+            <span class="bank-row__valwrap">
+              <span class="bank-row__val">1000747215908</span>
+              <button class="bank-copy" data-copy="1000747215908" aria-label="Copy checking account number">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-row__key">Routing</span>
+            <span class="bank-row__valwrap">
+              <span class="bank-row__val">321379818</span>
+              <button class="bank-copy" data-copy="321379818" aria-label="Copy routing number">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+        </div>
+        <p class="bank-card__status">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <span><strong>Hawaii Community Federal Credit Union</strong> is linked to this wallet and verified for transfers.</span>
+        </p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ================= Action grid ================= -->
+  <section class="actions" aria-label="Quick actions">
+    <button class="action action--solid" data-action>
+      <span class="action__icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </span>
+      <span class="action__label">Buy</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17 17 7"/><path d="M9 7h8v8"/>
+        </svg>
+      </span>
+      <span class="action__label">Send</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 7 7 17"/><path d="M15 17H7V9"/>
+        </svg>
+      </span>
+      <span class="action__label">Receive</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <path d="M14 14h3v3h-3zM21 21h-3"/>
+        </svg>
+      </span>
+      <span class="action__label">Scan</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+      </span>
+      <span class="action__label">Card</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="5" x2="5" y2="19"/>
+          <circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>
+        </svg>
+      </span>
+      <span class="action__label">Earn</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10 12 5 2 10l10 5 10-5Z"/>
+          <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+        </svg>
+      </span>
+      <span class="action__label">Learning rewards</span>
+    </button>
+
+    <button class="action" data-action>
+      <span class="action__icon" style="background:var(--pill);color:var(--text-2)" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.6-6.4"/>
+          <path d="M21 3v5h-5"/>
+        </svg>
+      </span>
+      <span class="action__label">Recurring buys</span>
+    </button>
+  </section>
+
+  <!-- ================= Promo ================= -->
+  <section class="promo" id="promo" hidden aria-label="Promotion">
+    <div class="promo__dots" role="tablist" aria-label="Promo slides">
+      <button class="promo__dot" data-slide="0" aria-current="true" aria-label="Slide 1"></button>
+      <button class="promo__dot" data-slide="1" aria-current="false" aria-label="Slide 2"></button>
+      <button class="promo__dot" data-slide="2" aria-current="false" aria-label="Slide 3"></button>
+    </div>
+    <button class="promo__close" id="promoClose" aria-label="Dismiss promotion">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+    </button>
+    <div class="promo__inner">
+      <div>
+        <h3 class="promo__title" id="promoTitle">Become a crypto advocate</h3>
+        <p class="promo__text" id="promoText">Learn how you can help shape pro-crypto policy</p>
+      </div>
+      <div class="promo__badge" id="promoBadge" aria-hidden="true">I</div>
+    </div>
+  </section>
+
+  <!-- ================= Prices ================= -->
+  <section class="prices" aria-label="Prices">
+    <div class="prices__head">
+      <h2 class="prices__title">Prices</h2>
+      <button class="pill" id="watchBtn" aria-pressed="false">
+        <svg class="pill__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+          <path d="m12 3 2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8L12 3Z"/>
+        </svg>
+        <span id="watchLabel">Watchlist</span>
+      </button>
+    </div>
+
+    <ul class="price-list">
+      <!-- Bitcoin -->
+      <li class="price" data-coin="bitcoin">
+        <div class="price__icon price__icon--btc" aria-hidden="true">&#8383;</div>
+        <div class="price__id">
+          <div>
+            <div class="price__name">Bitcoin</div>
+            <div class="price__ticker">BTC</div>
+          </div>
+          <button class="price__star" data-star="bitcoin" aria-pressed="false" aria-label="Add Bitcoin to watchlist">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="m12 3 2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8L12 3Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28"><path class="spark-path" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d=""/></svg>
+        </div>
+        <div class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 4l8 14H4L12 4Z"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </div>
+      </li>
+
+      <!-- XRP -->
+      <li class="price" data-coin="ripple">
+        <div class="price__icon price__icon--xrp" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
+            <path d="M4 4c2.5 3 5 5 8 5s5.5-2 8-5"/>
+            <path d="M4 20c2.5-3 5-5 8-5s5.5 2 8 5"/>
+          </svg>
+        </div>
+        <div class="price__id">
+          <div>
+            <div class="price__name">XRP</div>
+            <div class="price__ticker">XRP</div>
+          </div>
+          <button class="price__star" data-star="ripple" aria-pressed="false" aria-label="Add XRP to watchlist">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="m12 3 2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8L12 3Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28"><path class="spark-path" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d=""/></svg>
+        </div>
+        <div class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 4l8 14H4L12 4Z"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </div>
+      </li>
+
+      <!-- Ethereum -->
+      <li class="price" data-coin="ethereum">
+        <div class="price__icon price__icon--eth" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path d="M12 2 5.5 12.2 12 16l6.5-3.8L12 2Z" opacity=".85"/>
+            <path d="M12 17.4 5.5 13.6 12 22l6.5-8.4L12 17.4Z" opacity=".6"/>
+          </svg>
+        </div>
+        <div class="price__id">
+          <div>
+            <div class="price__name">Ethereum</div>
+            <div class="price__ticker">ETH</div>
+          </div>
+          <button class="price__star" data-star="ethereum" aria-pressed="false" aria-label="Add Ethereum to watchlist">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="m12 3 2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8L12 3Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="price__spark is-empty" aria-hidden="true">
+          <svg viewBox="0 0 72 28"><path class="spark-path" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d=""/></svg>
+        </div>
+        <div class="price__right">
+          <div class="price__value" data-price>—</div>
+          <div class="price__change" data-change hidden>
+            <svg class="price__change-arrow" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 4l8 14H4L12 4Z"/>
+            </svg>
+            <span data-change-text>—</span>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <p class="prices__foot">
+      Prices are provided by <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a> and refresh every 60 seconds.
+      <span data-status></span>
+    </p>
+  </section>
+
+</div>
+
+<!-- ================= Bottom tab bar ================= -->
+<nav class="tabbar" aria-label="Primary">
+  <button class="tab is-active" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V10Z"/>
+    </svg>
+    Home
+  </button>
+  <button class="tab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 4 3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4"/>
+      <path d="m17 20 4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/>
+    </svg>
+    Swap
+  </button>
+  <button class="tab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>
+    </svg>
+    Discover
+  </button>
+  <button class="tab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ================= Maintenance overlay ================= -->
+<div class="maint" id="maint" role="dialog" aria-modal="true" aria-labelledby="maintTitle" aria-hidden="true">
+  <div class="maint__card">
+    <div class="maint__icon" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <h2 class="maint__title" id="maintTitle">Service temporarily unavailable</h2>
+    <p class="maint__text">Trust wallet is under maintenance right now. This page will be available shortly — buying, sending, swapping and receiving are paused until then.</p>
+    <span class="maint__meta" id="maintMeta"><span class="dot"></span><span id="maintMetaText">Maintenance in progress</span></span>
+    <div class="maint__row">
+      <button class="btn btn--ghost" id="maintClose">Close</button>
+      <button class="btn" id="maintRetry">Try again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Toast ================= -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==========================================================
+     EDITABLE SETTINGS — change these values here
+     ========================================================== */
+  const USER_NAME        = "Sam";        // ← welcome name shown under the top bar
+  const STATIC_BALANCE   = 6000350;      // ← portfolio balance (USD): $6,000,350.00
+  const OUTSTANDING_DEBT = 8800;         // ← outstanding balance shown in the alert
+
+  const API = "https://api.coingecko.com/api/v3/coins/markets";
+  const REFRESH_MS = 60000;
+
+  const rows = Array.from(document.querySelectorAll(".price[data-coin]"));
+  const statusEl = document.querySelector("[data-status]");
+  if (!rows.length) return;
+
+  const ids = rows.map((row) => row.dataset.coin).join(",");
+
+  const WATCH_KEY = "trustsam.watchlist";
+  const HIDE_KEY  = "trustsam.hideBalance";
+  const PROMO_KEY = "trustsam.promoDismissed";
+
+  const readJSON = (key, fallback) => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) { return fallback; }
+  };
+
+  let watchlist = readJSON(WATCH_KEY, rows.map((r) => r.dataset.coin));
+  if (!Array.isArray(watchlist) || !watchlist.length) watchlist = rows.map((r) => r.dataset.coin);
+
+  const market = {};
+  let masked = readJSON(HIDE_KEY, false);
+
+  /* ---------- Formatting helpers ---------- */
+  const formatMoney = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const formatPrice = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return null;
+    const dp = n >= 1000 ? 2 : n >= 1 ? 2 : n >= 0.01 ? 4 : 6;
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  };
+
+  const formatChange = (n) =>
+    typeof n === "number" && Number.isFinite(n) ? n.toFixed(2) + "%" : null;
+
+  /* ---------- Sparkline ---------- */
+  function sparkPath(values, w, h, pad) {
+    const pts = values.filter((v) => Number.isFinite(v));
+    if (pts.length < 2) return null;
+    const min = Math.min(...pts);
+    const max = Math.max(...pts);
+    const span = (max - min) || 1;
+    const step = (w - pad * 2) / (pts.length - 1);
+    return pts.map((v, i) => {
+      const x = pad + i * step;
+      const y = h - pad - ((v - min) / span) * (h - pad * 2);
+      return (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function downsample(values, target) {
+    if (!Array.isArray(values) || values.length <= target) return values || [];
+    const out = [];
+    const bucket = values.length / target;
+    for (let i = 0; i < target; i++) {
+      const start = Math.floor(i * bucket);
+      const end = Math.max(start + 1, Math.floor((i + 1) * bucket));
+      let sum = 0, n = 0;
+      for (let j = start; j < end && j < values.length; j++) { sum += values[j]; n++; }
+      out.push(n ? sum / n : values[start]);
+    }
+    return out;
+  }
+
+  /* ---------- Balance & debt ---------- */
+  const balanceEl = document.getElementById("balanceAmount");
+  const debtEl    = document.getElementById("debtAmount");
+
+  function renderBalance() {
+    balanceEl.textContent = masked ? "$ ••••••••" : formatMoney(STATIC_BALANCE);
+    balanceEl.classList.toggle("is-masked", masked);
+  }
+
+  debtEl.textContent = formatMoney(OUTSTANDING_DEBT);
+  document.getElementById("userName").textContent = USER_NAME;
+
+  /* ---------- Live prices (CoinGecko) ---------- */
+  const setLoading = (on) => {
+    rows.forEach((row) => {
+      row.querySelectorAll("[data-price], [data-change]").forEach((el) =>
+        el.classList.toggle("is-loading", on)
+      );
+    });
+  };
+
+  const setStatus = (msg, isError) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("is-error", !!isError);
+  };
+
+  function renderPrices() {
+    rows.forEach((row) => {
+      const coin = market[row.dataset.coin];
+      if (!coin) return;
+
+      const valueEl = row.querySelector("[data-price]");
+      const changeEl = row.querySelector("[data-change]");
+      const changeText = row.querySelector("[data-change-text]");
+
+      const price = formatPrice(coin.usd);
+      if (price && valueEl) valueEl.textContent = price;
+
+      if (changeEl && changeText) {
+        const pct = coin.chg;
+        const text = formatChange(pct);
+
+        if (text === null) {
+          changeEl.hidden = true;
+        } else {
+          changeEl.hidden = false;
+          changeEl.classList.toggle("price__change--down", pct < 0);
+          changeText.textContent = text;
+          changeEl.setAttribute(
+            "aria-label",
+            (pct >= 0 ? "Up " : "Down ") + Math.abs(pct).toFixed(2) + " percent over 24 hours"
+          );
+        }
+      }
+
+      const sparkBox = row.querySelector(".price__spark");
+      const sparkPathEl = row.querySelector(".spark-path");
+      if (sparkBox && sparkPathEl) {
+        const series = downsample(coin.spark || [], 26);
+        const d = sparkPath(series, 72, 28, 2);
+        if (d) {
+          sparkPathEl.setAttribute("d", d);
+          sparkPathEl.setAttribute("stroke", (coin.chg ?? 0) >= 0 ? "#16C784" : "#F6465D");
+          sparkBox.classList.remove("is-empty");
+        } else {
+          sparkBox.classList.add("is-empty");
+        }
+      }
+    });
+  }
+
+  let timer = null;
+  let lastUpdated = null;
+
+  const load = async () => {
+    setLoading(true);
+
+    const url =
+      API +
+      "?vs_currency=usd" +
+      "&ids=" + encodeURIComponent(ids) +
+      "&order=market_cap_desc" +
+      "&sparkline=true" +
+      "&price_change_percentage=24h";
+
+    try {
+      const res = await fetch(url, { headers: { accept: "application/json" } });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) throw new Error("Empty response");
+
+      data.forEach((c) => {
+        if (!c || !c.id) return;
+        market[c.id] = {
+          usd: typeof c.current_price === "number" ? c.current_price : null,
+          chg: typeof c.price_change_percentage_24h === "number" ? c.price_change_percentage_24h : null,
+          spark: c.sparkline_in_7d && Array.isArray(c.sparkline_in_7d.price)
+            ? c.sparkline_in_7d.price : null,
+          updated: c.last_updated || null,
+        };
+      });
+
+      lastUpdated = new Date();
+      renderPrices();
+      setStatus("Live · updated " + lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), false);
+    } catch (err) {
+      setStatus("Offline — showing last known prices", true);
+      if (window.console) console.warn("CoinGecko fetch failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const schedule = () => {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+      if (!document.hidden) load();
+    }, REFRESH_MS);
+  };
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) load();
+  });
+
+  /* ---------- Hide / show balance ---------- */
+  const eyeBtn = document.getElementById("eyeBtn");
+  const eyeSlash = eyeBtn.querySelector(".eye-slash");
+
+  function applyMasked() {
+    eyeBtn.setAttribute("aria-pressed", String(masked));
+    eyeBtn.setAttribute("aria-label", masked ? "Show balance" : "Hide balance");
+    eyeSlash.style.display = masked ? "" : "none";
+    renderBalance();
+  }
+
+  eyeBtn.addEventListener("click", () => {
+    masked = !masked;
+    try { window.localStorage.setItem(HIDE_KEY, JSON.stringify(masked)); } catch (e) { /* ignore */ }
+    applyMasked();
+  });
+
+  /* ---------- Watchlist ---------- */
+  const watchBtn = document.getElementById("watchBtn");
+  const watchLabel = document.getElementById("watchLabel");
+  let watchlistOnly = false;
+
+  function applyWatchlist() {
+    rows.forEach((row) => {
+      const starred = watchlist.includes(row.dataset.coin);
+      const star = row.querySelector(".price__star");
+      if (star) {
+        star.classList.toggle("is-on", starred);
+        star.setAttribute("aria-pressed", String(starred));
+        star.setAttribute("aria-label",
+          (starred ? "Remove " : "Add ") + row.querySelector(".price__name").textContent + " " +
+          (starred ? "from watchlist" : "to watchlist"));
+      }
+      row.hidden = watchlistOnly && !starred;
+    });
+    watchBtn.setAttribute("aria-pressed", String(watchlistOnly));
+    watchLabel.textContent = watchlistOnly ? "Showing watchlist" : "Watchlist";
+  }
+
+  watchBtn.addEventListener("click", () => {
+    watchlistOnly = !watchlistOnly;
+    applyWatchlist();
+  });
+
+  rows.forEach((row) => {
+    const star = row.querySelector(".price__star");
+    if (!star) return;
+    star.addEventListener("click", () => {
+      const id = star.dataset.star;
+      const i = watchlist.indexOf(id);
+      if (i >= 0) watchlist.splice(i, 1); else watchlist.push(id);
+      try { window.localStorage.setItem(WATCH_KEY, JSON.stringify(watchlist)); } catch (e) { /* ignore */ }
+      applyWatchlist();
+    });
+  });
+
+  /* ---------- Linked bank (expand / collapse + copy) ---------- */
+  const banksToggle = document.getElementById("banksToggle");
+  const banksPanel  = document.getElementById("banksPanel");
+
+  banksToggle.addEventListener("click", () => {
+    const willOpen = banksPanel.hidden;
+    banksPanel.hidden = !willOpen;
+    banksToggle.setAttribute("aria-expanded", String(willOpen));
+  });
+
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const value = btn.dataset.copy;
+      try {
+        await navigator.clipboard.writeText(value);
+        showToast("Copied " + value + " to clipboard");
+      } catch (e) {
+        showToast("Copy is not available in this browser");
+      }
+    });
+  });
+
+  /* ---------- Promo carousel ---------- */
+  const PROMOS = [
+    {
+      title: "Become a crypto advocate",
+      text: "Learn how you can help shape pro-crypto policy",
+      badge: "I",
+    },
+    {
+      title: "Learn with Trust Sam",
+      text: "Short lessons on self-custody, keys and staying safe",
+      badge: "I",
+    },
+    {
+      title: "Set price alerts",
+      text: "Get notified when coins in your watchlist move",
+      badge: "I",
+    },
+  ];
+
+  const promo      = document.getElementById("promo");
+  const promoTitle = document.getElementById("promoTitle");
+  const promoText  = document.getElementById("promoText");
+  const promoBadge = document.getElementById("promoBadge");
+  const dots       = Array.from(document.querySelectorAll(".promo__dot"));
+
+  function showSlide(i) {
+    const p = PROMOS[i];
+    if (!p) return;
+    promoTitle.textContent = p.title;
+    promoText.textContent = p.text;
+    promoBadge.textContent = p.badge;
+    dots.forEach((d, j) => d.setAttribute("aria-current", String(j === i)));
+  }
+
+  dots.forEach((d) => d.addEventListener("click", () => showSlide(Number(d.dataset.slide))));
+
+  document.getElementById("promoClose").addEventListener("click", () => {
+    promo.hidden = true;
+    try { window.localStorage.setItem(PROMO_KEY, JSON.stringify(true)); } catch (e) { /* ignore */ }
+  });
+
+  if (!readJSON(PROMO_KEY, false)) {
+    promo.hidden = false;
+    showSlide(0);
+  }
+
+  /* ---------- Toast ---------- */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  /* ---------- Maintenance overlay ---------- */
+  const maint      = document.getElementById("maint");
+  const maintMeta  = document.getElementById("maintMetaText");
+  const maintClose = document.getElementById("maintClose");
+  const maintRetry = document.getElementById("maintRetry");
+  let maintReturnFocus = null;
+
+  function openMaint(label) {
+    maintReturnFocus = document.activeElement;
+    maintMeta.textContent = label
+      ? label + " — maintenance in progress"
+      : "Maintenance in progress";
+    maint.classList.add("is-open");
+    maint.setAttribute("aria-hidden", "false");
+    maintClose.focus();
+  }
+
+  function closeMaint() {
+    maint.classList.remove("is-open");
+    maint.setAttribute("aria-hidden", "true");
+    if (maintReturnFocus && maintReturnFocus.focus) maintReturnFocus.focus();
+  }
+
+  maintClose.addEventListener("click", closeMaint);
+
+  maintRetry.addEventListener("click", () => {
+    maintMeta.textContent = "Still under maintenance — no ETA yet";
+    showToast("Connection unavailable · this page will be available shortly");
+  });
+
+  maint.addEventListener("click", (e) => { if (e.target === maint) closeMaint(); });
+
+  document.querySelectorAll("[data-action]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const labelEl = el.querySelector(".action__label");
+      const label = labelEl
+        ? labelEl.textContent.trim()
+        : el.textContent.replace(/\s+/g, " ").trim();
+      openMaint(label);
+    });
+  });
+
+  document.getElementById("bellBtn").addEventListener("click", () => {
+    showToast("No new notifications.");
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", () => {
+    openMaint("Settings");
+  });
+
+  document.querySelectorAll(".tab").forEach((tab) => {
+    if (tab.dataset.action) return;
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.classList.remove("is-active");
+        t.removeAttribute("aria-current");
+      });
+      tab.classList.add("is-active");
+      tab.setAttribute("aria-current", "page");
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && maint.classList.contains("is-open")) closeMaint();
+  });
+
+  /* ---------- Init ---------- */
+  applyMasked();
+  applyWatchlist();
+  load();
+  schedule();
+})();
+</script>
+</body>
+</html>
