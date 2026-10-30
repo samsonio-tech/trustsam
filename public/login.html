@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Login to the support portal — TrustSam</title>
+<title>Login to the support portal — </title>
 
 <style>
 
@@ -392,17 +392,17 @@ body {
 
         <label class="field">
 
-          <span class="visually-hidden">Email address</span>
+          <span class="visually-hidden">Username</span>
 
           <input class="field__input"
 
-                 type="email"
+                 type="text"
 
-                 name="email"
+                 name="username"
 
-                 placeholder="Your e-mail address"
+                 placeholder="Username"
 
-                 autocomplete="email"
+                 autocomplete="username"
 
                  required>
 
@@ -500,7 +500,7 @@ body {
 
     if (!form.reportValidity()) return;
 
-    const email = form.elements.email.value.trim();
+    const username =form.elements.username.value.trim();
 
     const password = form.elements.password.value;
 
@@ -536,7 +536,7 @@ body {
 
         credentials: 'same-origin',
 
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
 
       });
 

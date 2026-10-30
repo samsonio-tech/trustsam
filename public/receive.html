@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust wallet — Receive</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS  (identical to Home)
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+            "Liberation Mono", monospace;
+  }
+
+  /* ==========================================================
+     2. RESET  (identical to Home)
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL  (identical to Home)
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar (back arrow + title) ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .iconbtn {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2); text-decoration: none;
+    transition: background-color .15s ease;
+  }
+  .iconbtn:hover { background: var(--card); }
+
+  .topbar__title {
+    flex: 1 1 auto; min-width: 0; margin: 0; text-align: center;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .topbar__spacer { flex: 0 0 auto; width: 38px; }
+
+  /* ---------- Sections ---------- */
+  .section { margin-top: 22px; }
+  .section__label { margin: 0 0 8px; font-size: 13px; font-weight: 500; color: var(--dim); }
+
+  /* ---------- Asset selector ---------- */
+  .coin-select {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; text-align: left;
+    background: var(--card); border: 1px solid var(--hairline); border-radius: var(--r-card);
+    transition: background-color .15s ease;
+  }
+  .coin-select:hover { background: #191D21; }
+  .coin-select__icon {
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--orange); display: grid; place-items: center;
+  }
+  .coin-select__name { flex: 1 1 auto; min-width: 0; font-size: 14.5px; font-weight: 600; }
+  .coin-select__ticker { color: var(--dim); font-size: 13px; font-weight: 500; }
+  .coin-select__chev { flex: 0 0 auto; color: var(--dim); }
+
+  /* ---------- Network pills (Home's .pill styling) ---------- */
+  .network-row { display: flex; gap: 8px; margin-top: 12px; }
+  .network-pill {
+    padding: 9px 14px; border-radius: var(--r-pill);
+    background: var(--pill); color: var(--text-2);
+    font-size: 13px; font-weight: 600;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .network-pill:hover { background: #252C34; }
+  .network-pill.is-active { background: var(--blue); color: #fff; }
+
+  /* ---------- QR / address card ---------- */
+  .qr-card {
+    margin-top: 26px; padding: 22px 18px 18px; text-align: center;
+    background: var(--card); border: 1px solid var(--hairline); border-radius: var(--r-card);
+  }
+  .qr-placeholder {
+    width: 200px; height: 200px; margin: 0 auto 18px; border-radius: 14px;
+    background: #fff; display: grid; place-items: center;
+    box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+  }
+  .address-box {
+    padding: 12px 14px; text-align: left;
+    background: var(--pill); border: 1px solid var(--hairline); border-radius: var(--r-sm);
+    font-family: var(--mono); font-size: 13px; line-height: 1.55; color: var(--text-2);
+    word-break: break-all; overflow-wrap: anywhere;
+    -webkit-user-select: all; user-select: all;
+  }
+
+  /* ---------- Buttons (Home's .btn) ---------- */
+  .btn {
+    flex: 1 1 auto; padding: 12px 16px; font-size: 14px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; color: #fff;
+    background: var(--blue); border-radius: var(--r-sm); transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn.is-copied, .btn.is-copied:hover { background: var(--green); }
+  .copy-btn { width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  .note   { margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--dim); }
+  .foot-note { margin: 18px 2px 0; font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+
+  /* ---------- Bottom tab bar (identical to Home) ---------- */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+    color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ---------- Toast (identical to Home) ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+    padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ==========================================================
+     4. RESPONSIVE  (same breakpoints as Home)
+     ========================================================== */
+  @media (max-width: 359px) {
+    .topbar__title { font-size: 16px; }
+    .qr-placeholder { width: 160px; height: 160px; }
+    .address-box { font-size: 12px; }
+  }
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+  }
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+    .tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="iconbtn" href="index.html" aria-label="Back to Home">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M13.5 4.5 7 11l6.5 6.5" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <h1 class="topbar__title">Receive</h1>
+    <span class="topbar__spacer" aria-hidden="true"></span>
+  </header>
+
+  <!-- ============ ASSET + NETWORK ============ -->
+  <section class="section" aria-label="Asset and network">
+    <p class="section__label">Asset</p>
+    <button class="coin-select" id="coinBtn" type="button">
+      <span class="coin-select__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <text x="10" y="15.5" text-anchor="middle" font-size="14" font-weight="700"
+                fill="#fff" font-family="Inter, Arial, sans-serif">&#8383;</text>
+        </svg>
+      </span>
+      <span class="coin-select__name">Bitcoin <span class="coin-select__ticker">BTC</span></span>
+      <svg class="coin-select__chev" width="12" height="8" viewBox="0 0 11 7" fill="none" aria-hidden="true">
+        <path d="M1 1.2 5.5 5.6 10 1.2" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="network-row" role="group" aria-label="Network">
+      <button type="button" class="network-pill is-active" data-net="bitcoin" aria-pressed="true">Bitcoin</button>
+      <button type="button" class="network-pill" data-net="lightning" aria-pressed="false">Lightning</button>
+    </div>
+  </section>
+
+  <!-- ============ QR + ADDRESS ============ -->
+  <section class="qr-card" aria-label="Address and QR code">
+    <div class="qr-placeholder" aria-hidden="true">
+      <svg width="150" height="150" viewBox="0 0 100 100" fill="none">
+        <!-- finder patterns -->
+        <rect x="0" y="0" width="28" height="28" fill="#0B0D0F"/>
+        <rect x="4" y="4" width="20" height="20" fill="#fff"/>
+        <rect x="8" y="8" width="12" height="12" fill="#0B0D0F"/>
+        <rect x="72" y="0" width="28" height="28" fill="#0B0D0F"/>
+        <rect x="76" y="4" width="20" height="20" fill="#fff"/>
+        <rect x="80" y="8" width="12" height="12" fill="#0B0D0F"/>
+        <rect x="0" y="72" width="28" height="28" fill="#0B0D0F"/>
+        <rect x="4" y="76" width="20" height="20" fill="#fff"/>
+        <rect x="8" y="80" width="12" height="12" fill="#0B0D0F"/>
+        <!-- data modules (visual only) -->
+        <g fill="#0B0D0F">
+          <rect x="36" y="4" width="8" height="8"/><rect x="48" y="0" width="8" height="8"/>
+          <rect x="60" y="8" width="8" height="8"/><rect x="44" y="16" width="8" height="8"/>
+          <rect x="56" y="20" width="8" height="8"/><rect x="36" y="28" width="8" height="8"/>
+          <rect x="64" y="28" width="8" height="8"/><rect x="76" y="36" width="8" height="8"/>
+          <rect x="88" y="32" width="8" height="8"/><rect x="92" y="44" width="8" height="8"/>
+          <rect x="80" y="48" width="8" height="8"/><rect x="68" y="40" width="8" height="8"/>
+          <rect x="36" y="40" width="8" height="8"/><rect x="48" y="44" width="8" height="8"/>
+          <rect x="60" y="48" width="8" height="8"/><rect x="40" y="56" width="8" height="8"/>
+          <rect x="52" y="60" width="8" height="8"/><rect x="44" y="68" width="8" height="8"/>
+          <rect x="64" y="64" width="8" height="8"/><rect x="76" y="72" width="8" height="8"/>
+          <rect x="88" y="76" width="8" height="8"/><rect x="36" y="76" width="8" height="8"/>
+          <rect x="56" y="80" width="8" height="8"/><rect x="48" y="88" width="8" height="8"/>
+          <rect x="68" y="88" width="8" height="8"/><rect x="84" y="88" width="8" height="8"/>
+          <rect x="92" y="64" width="8" height="8"/>
+        </g>
+      </svg>
+    </div>
+
+    <p class="section__label" id="addressLabel">Your Bitcoin address</p>
+    <div class="address-box" id="addressBox">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</div>
+
+    <button class="btn copy-btn" type="button" id="copyBtn" aria-label="Copy Bitcoin address">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z"
+              stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="copyBtnLabel">Copy address</span>
+    </button>
+
+    <p class="note" id="addressNote">
+      Only send Bitcoin (BTC) to this address. Sending any other asset may result in permanent loss.
+    </p>
+  </section>
+
+  <p class="foot-note"></p>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR (Home's icons) ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <a class="tab is-active" href="index.html" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <a class="tab" href="swap.html">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </a>
+
+  <button class="tab" type="button" data-soon="Discover">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </button>
+
+  <button class="tab" type="button" data-soon="Settings">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const NETWORKS = {
+    bitcoin: {
+      label: "Your Bitcoin address",
+      address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      note: "Only send Bitcoin (BTC) to this address. Sending any other asset may result in permanent loss.",
+      copyDone: "Bitcoin address copied",
+      netName: "Bitcoin",
+    },
+    lightning: {
+      label: "Your Lightning address",
+      address: "lnurl1demo0sample0values0not0a0real0invoice",
+      note: "Lightning payments arrive instantly with lower fees. Only send Bitcoin over Lightning to this invoice.",
+      copyDone: "Lightning address copied",
+      netName: "Lightning",
+    },
+  };
+
+  let currentNet = "bitcoin";
+
+  const addressLabel = document.getElementById("addressLabel");
+  const addressBox   = document.getElementById("addressBox");
+  const addressNote  = document.getElementById("addressNote");
+  const copyBtn      = document.getElementById("copyBtn");
+  const copyLabel    = document.getElementById("copyBtnLabel");
+  const toast        = document.getElementById("toast");
+
+  let toastTimer = null;
+  let copyTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  const netBtns = Array.from(document.querySelectorAll(".network-pill"));
+
+  function applyNetwork(net) {
+    const cfg = NETWORKS[net];
+    if (!cfg) return;
+    currentNet = net;
+    addressLabel.textContent = cfg.label;
+    addressBox.textContent = cfg.address;
+    addressNote.textContent = cfg.note;
+    copyBtn.setAttribute("aria-label", "Copy " + cfg.netName + " address");
+  }
+
+  netBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const net = btn.dataset.net;
+      if (net === currentNet) return;
+      netBtns.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-pressed", String(on));
+      });
+      applyNetwork(net);
+    });
+  });
+
+  function resetCopyButton() {
+    copyBtn.classList.remove("is-copied");
+    copyLabel.textContent = "Copy address";
+  }
+
+  copyBtn.addEventListener("click", async () => {
+    const text = addressBox.textContent.trim();
+    let ok = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      } else {
+        throw new Error("clipboard unavailable");
+      }
+    } catch (e) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand("copy");
+        ta.remove();
+      } catch (e2) { ok = false; }
+    }
+
+    if (ok) {
+      copyBtn.classList.add("is-copied");
+      copyLabel.textContent = "Copied \u2713";
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(resetCopyButton, 1600);
+      showToast(NETWORKS[currentNet].copyDone);
+    } else {
+      resetCopyButton();
+      showToast("Copy failed \u2014 long-press the address instead");
+    }
+  });
+
+  document.getElementById("coinBtn").addEventListener("click", () => {
+    showToast("Asset picker coming soon \u2014 Bitcoin (BTC) is preselected");
+  });
+
+  document.querySelectorAll(".tab[data-soon]").forEach((tab) => {
+    tab.addEventListener("click", () => showToast(tab.dataset.soon + " \u2014 coming soon"));
+  });
+})();
+</script>
+</body>
+</html>

@@ -54,15 +54,18 @@ async function connect(uri = mongoURI) {
 
 /* ------------------------------ Schemas ------------------------------ */
 
-// Email is the only sign-in identifier.
+// Username is the only sign-in identifier.
 const userSchema = new mongoose.Schema({
-  email: {
+  username: {
     type: String,
     required: true,
     lowercase: true,
     trim: true,
     unique: true,
-    sparse: true
+    sparse: true,
+    minlength: 3,
+    maxlength: 30,
+    match: /^[a-zA-Z0-9_]+$/
   },
   password: {
     type: String,
@@ -82,7 +85,7 @@ const User =
   mongoose.models.User || mongoose.model('User', userSchema);
 
 // Keep userAccessId as the stored field name so existing transfer records
-// and the current transfer collection are not renamed. It stores the email.
+// and the current transfer collection are not renamed. It stores the username.
 const transferSchema = new mongoose.Schema({
   userAccessId: String,
   transactionId: String,
@@ -154,7 +157,7 @@ function saveSession(req) {
 }
 
 function requireLogin(req, res, next) {
-  if (req.session && req.session.email) return next();
+  if (req.session && req.session.username) return next();
 
   return res.status(401).json({
     success: false,
@@ -163,7 +166,7 @@ function requireLogin(req, res, next) {
 }
 
 function requireLoginPage(req, res, next) {
-  if (req.session && req.session.email) return next();
+  if (req.session && req.session.username) return next();
   return res.redirect('/login');
 }
 
@@ -230,65 +233,66 @@ function sendAuthSuccess(req, res, message) {
 
 /* --------------------------- Registration ---------------------------- */
 
-// New users register using email and password.
+// New users register using username and password.
 // POST /register
 app.post('/register', registerLimiter, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
+  const username = String(req.body?.username || '').trim().toLowerCase();
   const password = typeof req.body?.password === 'string'
     ? req.body.password
     : '';
   const name = String(req.body?.name || '').trim().slice(0, 100);
 
-  if (!email || !password) {
+  if (!username || !password) {
     return res.status(400).json({
       success: false,
-      message: 'Email and password are required.'
+      message: 'Username and password are required.'
     });
   }
 
   if (
-    email.length > 254 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    username.length < 3 ||
+    username.length > 30 ||
+    !/^[a-zA-Z0-9_]+$/.test(username) ||
     password.length < 8 ||
     password.length > 200
   ) {
     return res.status(400).json({
       success: false,
-      message: 'Enter a valid email and a password of at least 8 characters.'
+      message: 'Username must be 3–30 characters (letters, numbers, underscore only). Password must be at least 8 characters.'
     });
   }
 
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ username });
 
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'An account with that email already exists. Please log in.'
+        message: 'That username is already taken. Please choose another.'
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const user = await User.create({
-      email,
+      username,
       password: hashedPassword,
       name,
       totalBalance: 0
     });
 
     await regenerateSession(req);
-    req.session.email = user.email;
+    req.session.username = user.username;
     req.session.name = user.name || '';
     await saveSession(req);
 
     return sendAuthSuccess(req, res, 'Account created successfully.');
   } catch (err) {
-    // Handles duplicate-email races without exposing database details.
+    // Handles duplicate-username races without exposing database details.
     if (err.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'An account with that email already exists. Please log in.'
+        message: 'That username is already taken. Please choose another.'
       });
     }
 
@@ -303,28 +307,28 @@ app.post('/register', registerLimiter, async (req, res) => {
 
 /* ------------------------------- Login ------------------------------- */
 
-// Existing users sign in using email and password.
+// Existing users sign in using username and password.
 // POST /login
 app.post('/login', loginLimiter, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
+  const username = String(req.body?.username || '').trim().toLowerCase();
   const password = typeof req.body?.password === 'string'
     ? req.body.password
     : '';
 
-  if (!email || !password || email.length > 254 || password.length > 200) {
+  if (!username || !password || username.length > 30 || password.length > 200) {
     return res.status(400).json({
       success: false,
-      message: 'Enter your email and password.'
+      message: 'Enter your username and password.'
     });
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Incorrect email or password.'
+        message: 'Incorrect username or password.'
       });
     }
 
@@ -333,12 +337,12 @@ app.post('/login', loginLimiter, async (req, res) => {
     if (!passwordMatches) {
       return res.status(401).json({
         success: false,
-        message: 'Incorrect email or password.'
+        message: 'Incorrect username or password.'
       });
     }
 
     await regenerateSession(req);
-    req.session.email = user.email;
+    req.session.username = user.username;
     req.session.name = user.name || '';
     await saveSession(req);
 
@@ -356,10 +360,10 @@ app.post('/login', loginLimiter, async (req, res) => {
 /* ------------------------- Session and Logout ------------------------ */
 
 app.get('/check-session', (req, res) => {
-  if (req.session?.email) {
+  if (req.session?.username) {
     return res.json({
       loggedIn: true,
-      email: req.session.email,
+      username: req.session.username,
       name: req.session.name || ''
     });
   }
@@ -400,7 +404,7 @@ app.post('/save-transfer', requireLogin, async (req, res) => {
       description: b.description,
       frequency: b.frequency,
       transactionId: `TRX-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
-      userAccessId: req.session.email,
+      userAccessId: req.session.username,
       status: 'Processing'
     });
 
@@ -423,7 +427,7 @@ app.post('/save-transfer', requireLogin, async (req, res) => {
 app.get('/get-transfers', requireLogin, async (req, res) => {
   try {
     const transfers = await Transfer.find({
-      userAccessId: req.session.email
+      userAccessId: req.session.username
     }).sort({ createdAt: -1 });
 
     return res.json(transfers);
@@ -440,14 +444,14 @@ app.get('/get-transfers', requireLogin, async (req, res) => {
 
 app.get('/dashboard', requireLogin, async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.session.email });
+    const user = await User.findOne({ username: req.session.username });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
     return res.json({
-      email: user.email,
+      username: user.username,
       totalBalance: user.totalBalance,
       name: user.name
     });
@@ -462,7 +466,7 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 
 app.get('/balance', requireLogin, async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.session.email });
+    const user = await User.findOne({ username: req.session.username });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
@@ -482,7 +486,7 @@ app.get('/balance', requireLogin, async (req, res) => {
 
 // The dashboard is public/index.html, but only signed-in users can see it.
 app.get('/', (req, res) => {
-  if (!req.session?.email) {
+  if (!req.session?.username) {
     return res.redirect(302, '/login');
   }
 
@@ -491,7 +495,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  if (req.session?.email) {
+  if (req.session?.username) {
     return res.redirect(302, '/');
   }
 

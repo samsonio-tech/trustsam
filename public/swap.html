@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust wallet — Swap</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS  (identical to Home — this is the blend)
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET  (same as Home)
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL  (same as Home)
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar (same as Home) ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .avatar {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-pill);
+    background: var(--blue); color: #fff; font-size: 14px; font-weight: 700;
+    display: grid; place-items: center; text-decoration: none; letter-spacing: .02em;
+  }
+  .avatar:hover { background: var(--blue-2); }
+
+  .topbar__brand {
+    flex: 1 1 auto; min-width: 0; font-size: 16px; font-weight: 700;
+    letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .iconbtn {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .iconbtn:hover { background: var(--card); }
+
+  /* ---------- Page heading (hero style carried over) ---------- */
+  .page-head { margin-top: 18px; }
+  .page-head__title {
+    margin: 0; font-size: clamp(26px, 7vw, 30px); font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .page-head__note { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: var(--dim); }
+
+  /* ==========================================================
+     4. SWAP CARD
+     ========================================================== */
+  .swap-card {
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    padding: 8px;
+  }
+
+  .swap-sides { position: relative; display: grid; gap: 10px; }
+
+  .swap-side {
+    background: var(--pill);
+    border-radius: 12px;
+    padding: 13px 14px 12px;
+    min-width: 0;
+  }
+
+  .swap-side__top {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .swap-side__label { font-size: 12.5px; font-weight: 600; color: var(--dim); }
+  .swap-side__balance {
+    font-size: 12px; color: var(--dim);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .swap-side__max {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--blue); padding: 2px 4px; border-radius: 4px;
+  }
+  .swap-side__max:hover { background: rgba(56,97,251,.14); }
+  .swap-side__max:disabled { color: var(--track); cursor: default; background: none; }
+
+  .swap-main { display: flex; align-items: center; gap: 10px; }
+
+  .swap-side__amount {
+    flex: 1 1 auto; min-width: 0; width: 100%;
+    background: none; border: 0; outline: none;
+    font-family: var(--font); font-size: 26px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--text); padding: 0;
+  }
+  .swap-side__amount::placeholder { color: var(--track); }
+  .swap-side__amount[readonly] { color: var(--text-2); -webkit-user-select: none; user-select: none; }
+
+  /* token picker */
+  .token-wrap { position: relative; flex: 0 0 auto; }
+  .token-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 10px 7px 8px; border-radius: var(--r-pill);
+    background: #252C34; font-size: 14px; font-weight: 700;
+    transition: background-color .15s ease; white-space: nowrap;
+  }
+  .token-btn:hover { background: #2C343D; }
+  .token-btn .token-btn__icon {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: grid; place-items: center; overflow: hidden; flex: 0 0 auto;
+  }
+  .token-btn .chev { transition: transform .15s ease; }
+  .token-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+  .token-menu {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+    width: 200px; padding: 6px;
+    background: #1B2026; border: 1px solid var(--hairline); border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.5);
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .token-menu.is-open { opacity: 1; transform: none; pointer-events: auto; }
+
+  .token-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 9px 10px; border-radius: 8px; text-align: left;
+  }
+  .token-item:hover, .token-item[aria-selected="true"] { background: #252C34; }
+  .token-item__icon {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center; overflow: hidden; flex: 0 0 auto;
+  }
+  .token-item__name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .token-item__sub  { font-size: 11.5px; color: var(--dim); margin-top: 1px; }
+  .token-item__tick { margin-left: auto; color: var(--blue); }
+
+  /* usd hint under the amount */
+  .swap-side__usd { margin-top: 7px; font-size: 12px; color: var(--dim); min-height: 14px; }
+  .swap-side__usd.is-error { color: var(--red); font-weight: 600; }
+
+  /* flip button, centered on the gap between the two sides */
+  .swap-flip {
+    position: absolute; left: 50%; top: 50%; z-index: 2;
+    transform: translate(-50%, -50%);
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #252C34; border: 4px solid var(--card);
+    color: var(--text-2); display: grid; place-items: center;
+    transition: background-color .15s ease, transform .12s ease;
+  }
+  .swap-flip:hover { background: var(--blue); color: #fff; border-color: var(--card); }
+  .swap-flip:active { transform: translate(-50%, -50%) scale(.92); }
+  .swap-flip svg { transition: transform .25s ease; }
+  .swap-flip.is-flipped svg { transform: rotate(180deg); }
+
+  /* fee / impact rows inside the card */
+  .swap-details { padding: 12px 8px 6px; display: grid; gap: 7px; }
+  .detail-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 13px; color: var(--dim);
+  }
+  .detail-row b { color: var(--text-2); font-weight: 600; }
+  .detail-row .hint { font-size: 11px; color: var(--track); }
+
+  /* ---------- Rate row ---------- */
+  .rate-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin: 12px 6px 0; font-size: 13px; color: var(--dim);
+    flex-wrap: wrap;
+  }
+  .rate-row strong { color: var(--text-2); font-weight: 600; }
+  .rate-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .rate-status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 0 3px rgba(22,199,132,.15);
+  }
+  .rate-status.is-off { color: var(--red); }
+  .rate-status.is-off .dot { box-shadow: 0 0 0 3px rgba(246,70,93,.15); }
+  .rate-status.is-loading { color: var(--dim); }
+
+  /* ---------- Review button ---------- */
+  .swap-btn {
+    width: 100%; margin-top: 18px; padding: 14px;
+    font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: #fff; background: var(--blue); border-radius: 12px;
+    transition: background-color .15s ease, opacity .15s ease;
+  }
+  .swap-btn:hover:not(:disabled) { background: var(--blue-2); }
+  .swap-btn:active:not(:disabled) { transform: scale(.985); }
+  .swap-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .swap-foot { margin: 14px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+  .swap-foot a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+  .swap-foot a:hover { color: var(--text-2); }
+  .swap-foot [data-status] { display: block; margin-top: 3px; }
+  .is-error { color: var(--red) !important; }
+
+  /* ==========================================================
+     5. BOTTOM TAB BAR  (same as Home)
+     ========================================================== */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+    color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ==========================================================
+     6. BUTTONS  (same as Home)
+     ========================================================== */
+  .btn {
+    flex: 1 1 auto; padding: 12px 16px; font-size: 14px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; color: #fff;
+    background: var(--blue); border-radius: var(--r-sm); transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn--ghost { background: transparent; border: 1px solid var(--hairline); color: var(--text-2); }
+  .btn--ghost:hover { background: var(--pill); }
+
+  /* ==========================================================
+     7. OVERLAYS  (maintenance + review sheet — same pattern as Home)
+     ========================================================== */
+  .maint {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px;
+    background: rgba(5,6,8,.74); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .maint.is-open { opacity: 1; pointer-events: auto; }
+  .maint__card {
+    width: 100%; max-width: 336px; background: var(--card); border: 1px solid var(--hairline);
+    border-radius: 18px; padding: 26px 22px 20px; text-align: center;
+    box-shadow: 0 26px 60px rgba(0,0,0,.65);
+    transform: translateY(10px) scale(.97); transition: transform .22s cubic-bezier(.2,.8,.3,1);
+  }
+  .maint.is-open .maint__card { transform: none; }
+  .maint__title { margin: 0 0 8px; font-size: 17.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .maint__text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+  .maint__row { display: flex; gap: 9px; margin-top: 20px; }
+  .maint__row .btn { padding: 11px 14px; font-size: 13px; }
+
+  .sheet__rows {
+    margin: 16px 0 0; padding: 4px 0;
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    display: grid; gap: 10px; text-align: left;
+  }
+  .sheet__row { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--dim); }
+  .sheet__row b { color: var(--text); font-weight: 600; text-align: right; }
+  .sheet__row small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--dim); font-weight: 400; text-align: right; }
+
+  /* ---------- Toast (same as Home) ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+    padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ==========================================================
+     8. RESPONSIVE  (same breakpoints as Home)
+     ========================================================== */
+  @media (max-width: 359px) {
+    .swap-side__amount { font-size: 22px; }
+    .token-btn { font-size: 13px; }
+    .rate-row { font-size: 12.5px; }
+  }
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+  }
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+    .tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR (same as Home) ============ -->
+  <header class="topbar">
+    <a class="avatar" href="/account" aria-label="Your account">L</a>
+    <div class="topbar__brand">Trust wallet</div>
+
+    <button class="iconbtn" type="button" id="bellBtn" aria-label="Notifications">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M10 3a4.6 4.6 0 0 0-4.6 4.6c0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6A4.6 4.6 0 0 0 10 3Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M8.4 15.2a1.7 1.7 0 0 0 3.2 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <button class="iconbtn" type="button" id="settingsBtn" aria-label="Settings" aria-haspopup="dialog">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 2.8v2M10 15.2v2M2.8 10h2M15.2 10h2M4.9 4.9l1.4 1.4M13.7 13.7l1.4 1.4M15.1 4.9l-1.4 1.4M6.3 13.7l-1.4 1.4"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============ PAGE HEADING ============ -->
+  <section class="page-head">
+    <h1 class="page-head__title">Swap</h1>
+    <p class="page-head__note">Trade assets at live market rates — rates refresh automatically.</p>
+  </section>
+
+  <!-- ============ SWAP CARD ============ -->
+  <section class="swap-card" aria-label="Swap">
+    <div class="swap-sides">
+
+      <!-- You pay -->
+      <div class="swap-side">
+        <div class="swap-side__top">
+          <span class="swap-side__label">You pay</span>
+          <span class="swap-side__balance">
+            <span id="fromBalanceText">Balance: —</span>
+            <button class="swap-side__max" type="button" id="maxBtn">Max</button>
+          </span>
+        </div>
+        <div class="swap-main">
+          <input class="swap-side__amount" id="fromAmount" type="text" inputmode="decimal"
+                 autocomplete="off" spellcheck="false" placeholder="0" aria-label="Amount you pay">
+          <div class="token-wrap">
+            <button class="token-btn" type="button" id="fromTokenBtn" aria-haspopup="menu" aria-expanded="false">
+              <span class="token-btn__icon" id="fromTokenIcon" aria-hidden="true"></span>
+              <span id="fromTokenTicker">—</span>
+              <svg class="chev" width="11" height="7" viewBox="0 0 11 7" fill="none" aria-hidden="true">
+                <path d="M1 1.2 5.5 5.6 10 1.2" stroke="#E9EBEF" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="token-menu" id="fromMenu" role="menu" aria-label="Select asset to pay"></div>
+          </div>
+        </div>
+        <div class="swap-side__usd" id="fromUsd" aria-live="polite"></div>
+      </div>
+
+      <!-- You receive -->
+      <div class="swap-side">
+        <div class="swap-side__top">
+          <span class="swap-side__label">You receive</span>
+          <span class="swap-side__balance"><span id="toBalanceText">Balance: —</span></span>
+        </div>
+        <div class="swap-main">
+          <input class="swap-side__amount" id="toAmount" type="text" placeholder="0" readonly
+                 aria-label="Amount you receive">
+          <div class="token-wrap">
+            <button class="token-btn" type="button" id="toTokenBtn" aria-haspopup="menu" aria-expanded="false">
+              <span class="token-btn__icon" id="toTokenIcon" aria-hidden="true"></span>
+              <span id="toTokenTicker">—</span>
+              <svg class="chev" width="11" height="7" viewBox="0 0 11 7" fill="none" aria-hidden="true">
+                <path d="M1 1.2 5.5 5.6 10 1.2" stroke="#E9EBEF" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="token-menu" id="toMenu" role="menu" aria-label="Select asset to receive"></div>
+          </div>
+        </div>
+        <div class="swap-side__usd" id="toUsd" aria-live="polite"></div>
+      </div>
+
+      <button class="swap-flip" type="button" id="flipBtn" aria-label="Flip assets">
+        <svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M7.5 18V5m0 0L3.5 9m4-4 4 4" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14.5 4v13m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- fee / impact (demo values) -->
+    <div class="swap-details">
+      <div class="detail-row">
+        <span>Est. network fee</span><b id="feeText">Est. $1.12</b>
+      </div>
+      <div class="detail-row">
+        <span>Price impact</span><b>~0.02% <span class="hint">(est.)</span></b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RATE ROW ============ -->
+  <div class="rate-row" id="rateRow">
+    <span><span id="ratePrefix">1 — ≈</span> <strong id="rateText">—</strong></span>
+    <span class="rate-status is-loading" id="rateStatus">
+      <span class="dot" aria-hidden="true"></span><span id="rateStatusText">Connecting</span>
+    </span>
+  </div>
+
+  <!-- ============ REVIEW BUTTON ============ -->
+  <button class="swap-btn" type="button" id="swapBtn" disabled>Enter an amount</button>
+
+  <p class="swap-foot">
+    
+    <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer"></a>
+    <span data-status role="status" aria-live="polite"></span>
+  </p>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR (same as Home) ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <a class="tab" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <a class="tab is-active" href="swap.html" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </a>
+
+  <button class="tab" type="button" data-action="maintenance">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </button>
+
+  <button class="tab" type="button" data-action="maintenance">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ============ REVIEW SHEET ============ -->
+<div class="maint" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="maint__card">
+    <h2 class="maint__title" id="sheetTitle">Review swap</h2>
+    <div class="sheet__rows" id="sheetRows"></div>
+    <p class="maint__text" style="margin-top:12px">Demo only — no transaction will be broadcast.</p>
+    <div class="maint__row">
+      <button class="btn btn--ghost" type="button" id="sheetCancel">Cancel</button>
+      <button class="btn" type="button" id="sheetConfirm">Confirm swap</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAINTENANCE OVERLAY (same as Home) ============ -->
+<div class="maint" id="maint" role="dialog" aria-modal="true" aria-labelledby="maintTitle" aria-hidden="true">
+  <div class="maint__card">
+    <div class="maint__icon" aria-hidden="true"
+         style="width:66px;height:66px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(246,70,93,.12);border:1px solid rgba(246,70,93,.32);color:var(--red)">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+        <path d="M4 26.5h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+        <path d="M6 12.5a12 12 0 0 1 6.2-3.3M14.5 8.2a12 12 0 0 1 11.5 4.3" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10 17.5a7.5 7.5 0 0 1 3.2-1.7M17.6 16.1a7.5 7.5 0 0 1 4.4 1.4" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="16" cy="22.4" r="1.9" fill="currentColor"/>
+        <path d="M6 7 26 27" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h2 class="maint__title" id="maintTitle">Service temporarily unavailable</h2>
+    <p class="maint__text">
+      Trust Sam is under maintenance right now. This page will be available shortly —
+      buying, sending, swapping and receiving are paused until then.
+    </p>
+
+    <p class="maint__meta"
+       style="display:inline-flex;align-items:center;gap:6px;margin:14px 0 0;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--hairline);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(246,70,93,.18)"></span>
+      <span id="maintMeta">Maintenance in progress</span>
+    </p>
+
+    <div class="maint__row">
+      <button class="btn btn--ghost" type="button" id="maintClose">Close</button>
+      <button class="btn" type="button" id="maintRetry">Try again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST (same as Home) ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==========================================================
+     TOKENS  (same three assets as the Home page)
+     ========================================================== */
+  const ICON = {
+    bitcoin:
+      '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><text x="12" y="18" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="Inter, Arial, sans-serif">\u20BF</text></svg>',
+    ethereum:
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 19 12.2 12 16.4 5 12.2 12 3Z" fill="#C9CFD6"/><path d="M12 3 19 12.2 12 16.4V3Z" fill="#8A96A0"/><path d="M12 18 19 13.8 12 21.5 5 13.8 12 18Z" fill="#3861FB"/></svg>',
+    ripple:
+      '<svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4.5 4.5 11 11l6.5-6.5M4.5 17.5 11 11l6.5 6.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  };
+
+  const TOKENS = {
+    bitcoin:  { id: "bitcoin",  ticker: "BTC", name: "Bitcoin",  bg: "#F7931A", balance: 0.25  },
+    ethereum: { id: "ethereum", ticker: "ETH", name: "Ethereum", bg: "#1E242B", balance: 4.2   },
+    ripple:   { id: "ripple",   ticker: "XRP", name: "XRP",      bg: "#111417", balance: 5200  },
+  };
+
+  const API = "https://api.coingecko.com/api/v3/simple/price";
+  const REFRESH_MS = 60000;
+  const EST_FEE_USD = 1.12;          // demo network fee
+  const IMPACT = 0.0002;             // demo price impact (0.02%)
+
+  /* ==========================================================
+     STATE
+     ========================================================== */
+  const state = {
+    from: "bitcoin",
+    to: "ripple",
+    amount: 0,
+    prices: {},        // { bitcoin: 69000, ... }
+    rate: null,
+    lastUpdated: null,
+  };
+
+  /* ==========================================================
+     ELEMENTS
+     ========================================================== */
+  const $ = (id) => document.getElementById(id);
+
+  const fromAmountEl = $("fromAmount");
+  const toAmountEl   = $("toAmount");
+  const fromUsdEl    = $("fromUsd");
+  const toUsdEl      = $("toUsd");
+  const fromBalEl    = $("fromBalanceText");
+  const toBalEl      = $("toBalanceText");
+  const maxBtn       = $("maxBtn");
+  const flipBtn      = $("flipBtn");
+  const swapBtn      = $("swapBtn");
+  const ratePrefix   = $("ratePrefix");
+  const rateText     = $("rateText");
+  const rateStatus   = $("rateStatus");
+  const rateStatusTx = $("rateStatusText");
+  const feeText      = $("feeText");
+  const statusEl     = document.querySelector("[data-status]");
+
+  /* ==========================================================
+     FORMATTERS
+     ========================================================== */
+  const formatMoney = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const fmtAmt = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    const abs = Math.abs(n);
+    const dp = abs >= 1000 ? 2 : abs >= 1 ? 4 : abs >= 0.01 ? 5 : 8;
+    return n.toLocaleString("en-US", { maximumFractionDigits: dp });
+  };
+
+  const fmtRate = (n) => {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    const abs = Math.abs(n);
+    const dp = abs >= 1000 ? 2 : abs >= 1 ? 4 : abs >= 0.01 ? 6 : 8;
+    return n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: dp });
+  };
+
+  /* ==========================================================
+     TOKEN PICKERS
+     ========================================================== */
+  function buildMenus() {
+    [["fromMenu", "from"], ["toMenu", "to"]].forEach(([menuId, side]) => {
+      const menu = $(menuId);
+      menu.innerHTML = "";
+      Object.values(TOKENS).forEach((t) => {
+        const selected = state[side] === t.id;
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "token-item";
+        item.setAttribute("role", "menuitem");
+        item.setAttribute("aria-selected", String(selected));
+        item.dataset.token = t.id;
+        item.innerHTML =
+          '<span class="token-item__icon" style="background:' + t.bg + '">' + ICON[t.id] + "</span>" +
+          '<span><span class="token-item__name">' + t.name + '</span>' +
+          '<div class="token-item__sub">' + t.ticker + "</div></span>" +
+          (selected
+            ? '<span class="token-item__tick"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="m2.5 7.5 3 3 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+            : "");
+        item.addEventListener("click", () => { selectToken(side, t.id); closeMenus(); });
+        menu.appendChild(item);
+      });
+    });
+  }
+
+  function renderTokenButtons() {
+    const f = TOKENS[state.from], t = TOKENS[state.to];
+    $("fromTokenIcon").style.background = f.bg;
+    $("fromTokenIcon").innerHTML = ICON[f.id];
+    $("fromTokenTicker").textContent = f.ticker;
+    $("toTokenIcon").style.background = t.bg;
+    $("toTokenIcon").innerHTML = ICON[t.id];
+    $("toTokenTicker").textContent = t.ticker;
+    ratePrefix.textContent = "1 " + f.ticker + " \u2248";
+    fromBalEl.textContent = "Balance: " + fmtAmt(f.balance) + " " + f.ticker;
+    toBalEl.textContent   = "Balance: " + fmtAmt(t.balance) + " " + t.ticker;
+  }
+
+  function openMenu(menu, btn) {
+    closeMenus();
+    menu.classList.add("is-open");
+    btn.setAttribute("aria-expanded", "true");
+  }
+  function closeMenus() {
+    document.querySelectorAll(".token-menu").forEach((m) => m.classList.remove("is-open"));
+    document.querySelectorAll(".token-btn").forEach((b) => b.setAttribute("aria-expanded", "false"));
+  }
+
+  function selectToken(side, id) {
+    const other = side === "from" ? "to" : "from";
+    if (state[other] === id) {           // picking the other side's asset → swap sides
+      [state.from, state.to] = [state.to, state.from];
+      if (side === "from" && state.from === id) { /* already correct */ }
+    } else {
+      state[side] = id;
+    }
+    renderTokenButtons();
+    buildMenus();
+    compute();
+  }
+
+  /* ==========================================================
+     PRICING  (CoinGecko — same pattern as Home)
+     ========================================================== */
+  const setStatus = (msg, isError) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("is-error", !!isError);
+  };
+
+  async function load() {
+    rateStatus.classList.remove("is-off");
+    rateStatus.classList.add("is-loading");
+    rateStatusTx.textContent = "Updating";
+
+    const ids = Object.keys(TOKENS).join(",");
+    const url = API + "?vs_currencies=usd&ids=" + encodeURIComponent(ids);
+
+    try {
+      const res = await fetch(url, { headers: { accept: "application/json" } });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+      Object.keys(TOKENS).forEach((id) => {
+        const usd = data && data[id] && typeof data[id].usd === "number" ? data[id].usd : null;
+        if (usd !== null) state.prices[id] = usd;
+      });
+
+      if (state.prices[state.from] == null || state.prices[state.to] == null) {
+        throw new Error("Missing price for selected pair");
+      }
+
+      state.lastUpdated = new Date();
+      rateStatus.classList.remove("is-loading");
+      rateStatusTx.textContent = "Live";
+      setStatus("Live \u00b7 updated " + state.lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), false);
+    } catch (err) {
+      rateStatus.classList.remove("is-loading");
+      rateStatus.classList.add("is-off");
+      rateStatusTx.textContent = "Offline";
+      setStatus("Offline \u2014 showing last known rates", true);
+      if (window.console) console.warn("CoinGecko fetch failed:", err);
+    } finally {
+      compute();
+    }
+  }
+
+  function schedule() {
+    setInterval(() => { if (!document.hidden) load(); }, REFRESH_MS);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+  }
+
+  /* ==========================================================
+     CONVERSION
+     ========================================================== */
+  function compute() {
+    const pF = state.prices[state.from];
+    const pT = state.prices[state.to];
+    const havePrices = typeof pF === "number" && typeof pT === "number";
+
+    state.rate = havePrices ? pF / pT : null;
+    rateText.textContent = havePrices ? fmtRate(state.rate) : "—";
+
+    const amt = state.amount;
+    const toTok = TOKENS[state.to];
+    const fromTok = TOKENS[state.from];
+
+    // receive amount + usd hints
+    let receive = null;
+    if (havePrices && amt > 0) receive = amt * state.rate;
+
+    toAmountEl.value = receive !== null ? fmtAmt(receive) : "";
+
+    const insufficient = amt > fromTok.balance;
+    fromUsdEl.classList.toggle("is-error", insufficient && amt > 0);
+
+    if (amt > 0 && havePrices) {
+      fromUsdEl.textContent = insufficient
+        ? "Insufficient " + fmtAmt(fromTok.balance) + " " + fromTok.ticker + " balance"
+        : "\u2248 " + formatMoney(amt * pF);
+    } else if (amt > 0 && !havePrices) {
+      fromUsdEl.textContent = "Prices unavailable";
+      fromUsdEl.classList.add("is-error");
+    } else {
+      fromUsdEl.textContent = "\u2248 " + (havePrices ? formatMoney(0) : "—");
+    }
+
+    toUsdEl.textContent = receive !== null && havePrices
+      ? "\u2248 " + formatMoney(receive * pT)
+      : "\u2248 " + (havePrices ? formatMoney(0) : "—");
+
+    feeText.textContent = havePrices ? "Est. " + formatMoney(EST_FEE_USD) : "—";
+
+    // button state
+    let label = "Review swap";
+    let enabled = true;
+    if (!havePrices)            { label = "Prices unavailable"; enabled = false; }
+    else if (!(amt > 0))        { label = "Enter an amount";    enabled = false; }
+    else if (insufficient)      { label = "Insufficient " + fromTok.ticker + " balance"; enabled = false; }
+    else if (state.from === state.to) { label = "Select different assets"; enabled = false; }
+    swapBtn.disabled = !enabled;
+    swapBtn.textContent = label;
+  }
+
+  /* ==========================================================
+     INPUT HANDLING
+     ========================================================== */
+  fromAmountEl.addEventListener("input", () => {
+    let v = fromAmountEl.value.replace(/[^0-9.]/g, "");
+    const parts = v.split(".");
+    if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+    if (v !== fromAmountEl.value) fromAmountEl.value = v;
+    state.amount = parseFloat(v) || 0;
+    compute();
+  });
+
+  maxBtn.addEventListener("click", () => {
+    const bal = TOKENS[state.from].balance;
+    fromAmountEl.value = String(bal);
+    state.amount = bal;
+    compute();
+  });
+
+  flipBtn.addEventListener("click", () => {
+    [state.from, state.to] = [state.to, state.from];
+    const v = fromAmountEl.value;                 // carry the entered amount across
+    fromAmountEl.value = toAmountEl.value === "" ? "" : toAmountEl.value.replace(/,/g, "");
+    state.amount = parseFloat(fromAmountEl.value) || 0;
+    flipBtn.classList.toggle("is-flipped");
+    renderTokenButtons();
+    buildMenus();
+    compute();
+    void v;
+  });
+
+  /* token menu open/close */
+  [["fromTokenBtn", "fromMenu"], ["toTokenBtn", "toMenu"]].forEach(([btnId, menuId]) => {
+    const btn = $(btnId), menu = $(menuId);
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = menu.classList.contains("is-open");
+      closeMenus();
+      if (!isOpen) openMenu(menu, btn);
+    });
+    menu.addEventListener("click", (e) => e.stopPropagation());
+  });
+  document.addEventListener("click", closeMenus);
+
+  /* ==========================================================
+     REVIEW SHEET
+     ========================================================== */
+  const sheet = $("sheet");
+  const sheetRows = $("sheetRows");
+  let sheetReturnFocus = null;
+
+  function openSheet() {
+    const f = TOKENS[state.from], t = TOKENS[state.to];
+    const amt = state.amount;
+    const receive = amt * state.rate;
+
+    sheetRows.innerHTML =
+      '<div class="sheet__row"><span>You pay</span><b>' + fmtAmt(amt) + " " + f.ticker +
+        "<small>\u2248 " + formatMoney(amt * state.prices[state.from]) + "</small></b></div>" +
+      '<div class="sheet__row"><span>You receive</span><b>' + fmtAmt(receive) + " " + t.ticker +
+        "<small>\u2248 " + formatMoney(receive * state.prices[state.to]) + "</small></b></div>" +
+      '<div class="sheet__row"><span>Rate</span><b>1 ' + f.ticker + " \u2248 " + fmtRate(state.rate) + " " + t.ticker + "</b></div>" +
+      '<div class="sheet__row"><span>Est. network fee</span><b>' + formatMoney(EST_FEE_USD) + "</b></div>" +
+      '<div class="sheet__row"><span>Price impact</span><b>~' + (IMPACT * 100).toFixed(2) + "%</b></div>";
+
+    sheetReturnFocus = document.activeElement;
+    sheet.classList.add("is-open");
+    sheet.setAttribute("aria-hidden", "false");
+    $("sheetCancel").focus();
+  }
+
+  function closeSheet() {
+    sheet.classList.remove("is-open");
+    sheet.setAttribute("aria-hidden", "true");
+    if (sheetReturnFocus && sheetReturnFocus.focus) sheetReturnFocus.focus();
+  }
+
+  swapBtn.addEventListener("click", openSheet);
+  $("sheetCancel").addEventListener("click", closeSheet);
+  $("sheetConfirm").addEventListener("click", () => {
+    closeSheet();
+    showToast("Swap submitted \u00b7 demo only, nothing was broadcast");
+  });
+  sheet.addEventListener("click", (e) => { if (e.target === sheet) closeSheet(); });
+
+  /* ==========================================================
+     TOAST (same as Home)
+     ========================================================== */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  /* ==========================================================
+     MAINTENANCE OVERLAY (same as Home)
+     ========================================================== */
+  const maint = document.getElementById("maint");
+  const maintMeta = document.getElementById("maintMeta");
+  let maintReturnFocus = null;
+
+  function openMaint(label) {
+    maintReturnFocus = document.activeElement;
+    maintMeta.textContent = label ? label + " \u2014 maintenance in progress" : "Maintenance in progress";
+    maint.classList.add("is-open");
+    maint.setAttribute("aria-hidden", "false");
+    document.getElementById("maintClose").focus();
+  }
+  function closeMaint() {
+    maint.classList.remove("is-open");
+    maint.setAttribute("aria-hidden", "true");
+    if (maintReturnFocus && maintReturnFocus.focus) maintReturnFocus.focus();
+  }
+
+  document.getElementById("maintClose").addEventListener("click", closeMaint);
+  document.getElementById("maintRetry").addEventListener("click", () => {
+    maintMeta.textContent = "Still under maintenance \u2014 no ETA yet";
+    showToast("Connection unavailable \u00b7 this page will be available shortly");
+  });
+  maint.addEventListener("click", (e) => { if (e.target === maint) closeMaint(); });
+
+  document.querySelectorAll("[data-action]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const labelEl = el.querySelector(".action__label");
+      const label = labelEl
+        ? labelEl.textContent.trim()
+        : el.textContent.replace(/\s+/g, " ").trim();
+      openMaint(label);
+    });
+  });
+
+  document.getElementById("bellBtn").addEventListener("click", () => {
+    showToast("No new notifications.");
+  });
+  document.getElementById("settingsBtn").addEventListener("click", () => openMaint("Settings"));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (document.querySelector(".token-menu.is-open")) { closeMenus(); return; }
+    if (sheet.classList.contains("is-open")) { closeSheet(); return; }
+    if (maint.classList.contains("is-open")) closeMaint();
+  });
+
+  /* ==========================================================
+     INIT
+     ========================================================== */
+  renderTokenButtons();
+  buildMenus();
+  compute();
+  load();
+  schedule();
+})();
+</script>
+</body>
+</html>
