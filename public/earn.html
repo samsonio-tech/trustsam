@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust wallet— Earn</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS  (identical to index.html)
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .iconbtn {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .iconbtn:hover { background: var(--card); }
+  .iconbtn:active { transform: scale(.94); }
+
+  .topbar__title {
+    flex: 1 1 auto; min-width: 0; margin: 0;
+    font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+    text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ==========================================================
+     4. HERO CARD
+     ========================================================== */
+  .hero-card {
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    overflow: hidden;
+  }
+
+  .hero-visual {
+    position: relative;
+    height: 168px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 95% at 16% 4%, rgba(56,97,251,.46) 0%, rgba(56,97,251,0) 62%),
+      radial-gradient(90% 80% at 96% 96%, rgba(22,199,132,.20) 0%, rgba(22,199,132,0) 60%),
+      linear-gradient(158deg, #111B38 0%, #0C1222 55%, #0B0D0F 100%);
+  }
+
+  .hero-visual::after {
+    content: "";
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(to right, rgba(255,255,255,.055) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.055) 0 1px, transparent 1px 46px);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), transparent 88%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), transparent 88%);
+  }
+
+  .hero-visual__chart {
+    position: absolute; inset: 0; z-index: 1;
+    width: 100%; height: 100%;
+  }
+
+  .hero-visual__chip {
+    position: absolute; z-index: 2; top: 14px; left: 14px;
+    display: inline-flex; align-items: baseline; gap: 5px;
+    padding: 7px 12px 8px; border-radius: var(--r-pill);
+    background: rgba(11,13,15,.55);
+    border: 1px solid rgba(255,255,255,.10);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .hero-visual__chip b {
+    font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: var(--text);
+  }
+  .hero-visual__chip small {
+    font-size: 10px; font-weight: 700; letter-spacing: .10em;
+    text-transform: uppercase; color: var(--green);
+  }
+
+  .hero-body { padding: 20px 20px 22px; }
+
+  .hero-body__eyebrow {
+    margin: 0 0 8px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .10em;
+    text-transform: uppercase; color: var(--dim);
+  }
+
+  .hero-body__title {
+    margin: 0 0 10px;
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .hero-body__title em { font-style: normal; color: var(--green); }
+
+  .hero-body__text {
+    margin: 0 0 20px;
+    font-size: 13.5px; line-height: 1.5; color: var(--dim); max-width: 320px;
+  }
+
+  /* ---------- Primary button (same as home .btn) ---------- */
+  .btn {
+    display: block; width: 100%; padding: 14px 16px;
+    font-size: 13.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: #fff; background: var(--blue); border-radius: var(--r-sm);
+    transition: background-color .15s ease, transform .12s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn:active { transform: scale(.99); }
+
+  /* ==========================================================
+     5. AVAILABLE YIELDS
+     ========================================================== */
+  .rates { margin-top: 28px; }
+
+  .rates__head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px;
+  }
+  .rates__title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px;
+    border-radius: var(--r-pill); background: var(--pill); color: var(--text-2);
+    font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  }
+  .pill__dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 0 3px rgba(22,199,132,.16);
+  }
+
+  .yield-list {
+    list-style: none; margin: 0; padding: 0;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    overflow: hidden;
+  }
+
+  .yield {
+    display: grid; grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center; gap: 12px; width: 100%;
+    padding: 14px 16px; text-align: left;
+    border-bottom: 1px solid var(--hairline);
+    transition: background-color .15s ease;
+  }
+  .yield-list li:last-child .yield { border-bottom: 0; }
+  .yield:hover { background: #181C21; }
+  .yield:active { background: #1D2329; }
+
+  .yield__icon {
+    width: 40px; height: 40px; border-radius: var(--r-pill);
+    display: grid; place-items: center; overflow: hidden;
+    font-size: 16px; font-weight: 700; color: #fff;
+    font-family: var(--font);
+  }
+
+  .yield__meta { min-width: 0; display: block; }
+  .yield__name {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 14.5px; font-weight: 600; color: var(--text);
+  }
+  .yield__ticker { font-size: 12px; font-weight: 500; color: var(--dim); }
+  .yield__sub { display: block; margin-top: 2px; font-size: 12px; color: var(--dim); }
+
+  .yield__right { text-align: right; white-space: nowrap; justify-self: end; }
+  .yield__cap {
+    display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .yield__apy {
+    display: block; margin-top: 2px;
+    font-size: 15px; font-weight: 700; color: var(--green);
+  }
+  .yield__apy span { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; }
+
+  .rates__foot {
+    margin: 14px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--dim);
+  }
+  .rates__foot strong { color: var(--text-2); font-weight: 600; }
+  .rates__foot span { display: block; margin-top: 4px; }
+
+  /* ==========================================================
+     6. BOTTOM TAB BAR
+     ========================================================== */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline);
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 0 2px; color: var(--dim);
+    font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ==========================================================
+     7. MAINTENANCE OVERLAY  (same as home)
+     ========================================================== */
+  .maint {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px;
+    background: rgba(5,6,8,.74);
+    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .maint.is-open { opacity: 1; pointer-events: auto; }
+
+  .maint__card {
+    width: 100%; max-width: 336px; background: var(--card);
+    border: 1px solid var(--hairline); border-radius: 18px;
+    padding: 26px 22px 20px; text-align: center;
+    box-shadow: 0 26px 60px rgba(0,0,0,.65);
+    transform: translateY(10px) scale(.97);
+    transition: transform .22s cubic-bezier(.2,.8,.3,1);
+  }
+  .maint.is-open .maint__card { transform: none; }
+
+  .maint__icon {
+    width: 66px; height: 66px; margin: 0 auto 16px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(246,70,93,.12); border: 1px solid rgba(246,70,93,.32); color: var(--red);
+  }
+  .maint__title { margin: 0 0 8px; font-size: 17.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .maint__text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+
+  .maint__meta {
+    display: inline-flex; align-items: center; gap: 6px; margin: 14px 0 0;
+    padding: 4px 10px; border-radius: var(--r-pill);
+    background: rgba(255,255,255,.05); border: 1px solid var(--hairline);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .maint__meta .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+    box-shadow: 0 0 0 3px rgba(246,70,93,.18);
+  }
+
+  .maint__row { display: flex; gap: 9px; margin-top: 20px; }
+  .maint__row .btn { width: auto; flex: 1 1 auto; padding: 11px 14px; font-size: 12.5px; }
+  .btn--ghost {
+    background: transparent; border: 1px solid var(--hairline); color: var(--text-2);
+  }
+  .btn--ghost:hover { background: var(--pill); }
+
+  /* ==========================================================
+     8. TOAST
+     ========================================================== */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80;
+    max-width: min(90vw, 380px); padding: 10px 16px;
+    background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ==========================================================
+     9. RESPONSIVE
+     ========================================================== */
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+    .hero-visual { height: 152px; }
+    .hero-body { padding: 18px 16px 20px; }
+    .hero-body__title { font-size: 20.5px; }
+    .yield { padding: 13px 14px; gap: 11px; }
+  }
+
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app {
+      min-height: auto; border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 30px 70px rgba(0,0,0,.6);
+      padding: 20px 22px 32px;
+    }
+    .tabbar {
+      bottom: 14px; width: min(100%, 430px);
+      border: 1px solid var(--hairline); border-radius: var(--r-pill);
+      padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="iconbtn" href="index.html" aria-label="Back to home">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M11.8 4.6 6.4 10l5.4 5.4" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+    <h1 class="topbar__title">Earn</h1>
+
+    <button class="iconbtn" type="button" id="infoBtn" aria-label="How earning works">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="7.4" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 9v4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="10" cy="6.4" r="1.05" fill="currentColor"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero-card" aria-labelledby="earn-title">
+
+    <div class="hero-visual" aria-hidden="true">
+      <svg class="hero-visual__chart" viewBox="0 0 360 168" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#3861FB"/>
+            <stop offset="62%"  stop-color="#3B84F0"/>
+            <stop offset="100%" stop-color="#16C784"/>
+          </linearGradient>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#3861FB" stop-opacity=".40"/>
+            <stop offset="70%"  stop-color="#3861FB" stop-opacity=".08"/>
+            <stop offset="100%" stop-color="#3861FB" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <path d="M0 148 C 40 144 64 132 92 126 C 124 119 150 112 178 100
+                 C 206 88 226 84 252 70 C 278 56 306 48 330 38 L 360 30
+                 L 360 168 L 0 168 Z"
+              fill="url(#areaGrad)"/>
+
+        <path d="M0 148 C 40 144 64 132 92 126 C 124 119 150 112 178 100
+                 C 206 88 226 84 252 70 C 278 56 306 48 330 38 L 360 30"
+              fill="none" stroke="url(#lineGrad)" stroke-width="2.4"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+
+      <div class="hero-visual__chip"><b>5.4%</b><small>APY</small></div>
+    </div>
+
+    <div class="hero-body">
+      <p class="hero-body__eyebrow">Money account</p>
+      <h2 class="hero-body__title" id="earn-title">Earn up to <em>5.4% APY</em></h2>
+      <p class="hero-body__text">
+        Fund your Money account and watch your balance grow with up to 5.4% APY (variable).
+      </p>
+      <button class="btn" type="button" data-action="maintenance">Add funds</button>
+    </div>
+  </section>
+
+  <!-- ============ AVAILABLE YIELDS ============ -->
+  <section class="rates" aria-labelledby="rates-title">
+    <div class="rates__head">
+      <h2 class="rates__title" id="rates-title">Available yields</h2>
+      <span class="pill"><span class="pill__dot" aria-hidden="true"></span>Flexible</span>
+    </div>
+
+    <ul class="yield-list">
+
+      <li>
+        <button class="yield" type="button" data-action="maintenance" data-label="Bitcoin yield">
+          <span class="yield__icon" style="background:#F7931A" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <text x="12" y="18" text-anchor="middle" font-size="17" font-weight="700"
+                    fill="#fff" font-family="Inter, Arial, sans-serif">&#8383;</text>
+            </svg>
+          </span>
+          <span class="yield__meta">
+            <span class="yield__name">Bitcoin <span class="yield__ticker">BTC</span></span>
+            <span class="yield__sub">Flexible &middot; no lock-up</span>
+          </span>
+          <span class="yield__right">
+            <span class="yield__cap">up to</span>
+            <span class="yield__apy">1.2% <span>APY</span></span>
+          </span>
+        </button>
+      </li>
+
+      <li>
+        <button class="yield" type="button" data-action="maintenance" data-label="Ethereum yield">
+          <span class="yield__icon" style="background:#627EEA" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3 19 12.2 12 16.4 5 12.2 12 3Z" fill="#fff" opacity=".95"/>
+              <path d="M12 3 19 12.2 12 16.4V3Z" fill="#fff" opacity=".55"/>
+              <path d="M12 18 19 13.8 12 21.5 5 13.8 12 18Z" fill="#fff"/>
+            </svg>
+          </span>
+          <span class="yield__meta">
+            <span class="yield__name">Ethereum <span class="yield__ticker">ETH</span></span>
+            <span class="yield__sub">Flexible &middot; no lock-up</span>
+          </span>
+          <span class="yield__right">
+            <span class="yield__cap">up to</span>
+            <span class="yield__apy">2.8% <span>APY</span></span>
+          </span>
+        </button>
+      </li>
+
+      <li>
+        <button class="yield" type="button" data-action="maintenance" data-label="Tether yield">
+          <span class="yield__icon" style="background:#26A17B" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6.6 6.2h10.8v2.1h-4.1v1.5c2.9.16 5 .85 5 1.68s-2.1 1.52-5 1.68v4.9h-2.6v-4.9c-2.9-.16-5-.85-5-1.68s2.1-1.52 5-1.68V8.3H6.6V6.2Z"
+                    fill="#fff"/>
+            </svg>
+          </span>
+          <span class="yield__meta">
+            <span class="yield__name">Tether <span class="yield__ticker">USDT</span></span>
+            <span class="yield__sub">Flexible &middot; no lock-up</span>
+          </span>
+          <span class="yield__right">
+            <span class="yield__cap">up to</span>
+            <span class="yield__apy">5.4% <span>APY</span></span>
+          </span>
+        </button>
+      </li>
+
+    </ul>
+
+    <p class="rates__foot">
+      <strong>Rates are variable</strong> and may change at any time. Yields are illustrative,
+      not a promise of future returns.
+      <span></span>
+    </p>
+  </section>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <a class="tab is-active" href="index.html" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <button class="tab" type="button" data-action="maintenance" data-label="Swap">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </button>
+
+  <button class="tab" type="button" data-action="maintenance" data-label="Discover">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </button>
+
+  <button class="tab" type="button" data-action="maintenance" data-label="Settings">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ============ MAINTENANCE OVERLAY ============ -->
+<div class="maint" id="maint" role="dialog" aria-modal="true" aria-labelledby="maintTitle" aria-hidden="true">
+  <div class="maint__card">
+    <div class="maint__icon" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+        <path d="M4 26.5h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+        <path d="M6 12.5a12 12 0 0 1 6.2-3.3M14.5 8.2a12 12 0 0 1 11.5 4.3" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10 17.5a7.5 7.5 0 0 1 3.2-1.7M17.6 16.1a7.5 7.5 0 0 1 4.4 1.4" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="16" cy="22.4" r="1.9" fill="currentColor"/>
+        <path d="M6 7 26 27" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h2 class="maint__title" id="maintTitle">Service temporarily unavailable</h2>
+    <p class="maint__text">
+      Trust wallet is under maintenance right now. This page will be available shortly —
+      buying, sending, swapping and receiving are paused until then.
+    </p>
+
+    <p class="maint__meta">
+      <span class="dot" aria-hidden="true"></span><span id="maintMeta">Maintenance in progress</span>
+    </p>
+
+    <div class="maint__row">
+      <button class="btn btn--ghost" type="button" id="maintClose">Close</button>
+      <button class="btn" type="button" id="maintRetry">Try again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------- Toast ---------- */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  /* ---------- Maintenance overlay ---------- */
+  const maint      = document.getElementById("maint");
+  const maintMeta  = document.getElementById("maintMeta");
+  const maintClose = document.getElementById("maintClose");
+  const maintRetry = document.getElementById("maintRetry");
+  let returnFocus  = null;
+
+  function openMaint(label) {
+    returnFocus = document.activeElement;
+    maintMeta.textContent = label
+      ? label + " \u2014 maintenance in progress"
+      : "Maintenance in progress";
+    maint.classList.add("is-open");
+    maint.setAttribute("aria-hidden", "false");
+    maintClose.focus();
+  }
+
+  function closeMaint() {
+    maint.classList.remove("is-open");
+    maint.setAttribute("aria-hidden", "true");
+    if (returnFocus && returnFocus.focus) returnFocus.focus();
+  }
+
+  maintClose.addEventListener("click", closeMaint);
+  maint.addEventListener("click", (e) => { if (e.target === maint) closeMaint(); });
+
+  maintRetry.addEventListener("click", () => {
+    maintMeta.textContent = "Still under maintenance \u2014 no ETA yet";
+    showToast("Connection unavailable \u00b7 this page will be available shortly");
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && maint.classList.contains("is-open")) closeMaint();
+  });
+
+  /* ---------- Demo actions ---------- */
+  document.querySelectorAll("[data-action]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const labelEl = el.querySelector(".yield__name, .action__label");
+      const label = el.dataset.label
+        || (labelEl ? labelEl.textContent.trim() : el.textContent.replace(/\s+/g, " ").trim());
+      openMaint(label);
+    });
+  });
+
+  document.getElementById("infoBtn").addEventListener("click", () => {
+    showToast("Rates are variable and reviewed daily \u00b7 APY is not guaranteed");
+  });
+})();
+</script>
+</body>
+</html>

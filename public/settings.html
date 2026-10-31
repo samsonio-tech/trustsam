@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust wallet — Settings</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS  (identical to index.html / buy.html)
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .topbar__back {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .topbar__back:hover { background: var(--card); }
+
+  .topbar__title {
+    flex: 1 1 auto; min-width: 0; margin: 0; text-align: center;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .topbar__spacer { flex: 0 0 auto; width: 38px; height: 38px; }
+
+  /* ---------- Settings list ---------- */
+  .settings-list { margin-top: 12px; display: grid; gap: 8px; }
+  .set-item {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 16px 14px; background: var(--card); border-radius: var(--r-card);
+    text-align: left; transition: background-color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .set-item:hover { background: #181C20; }
+  .set-item:active { background: var(--pill); }
+  .set-item__icon {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px;
+    background: var(--pill); display: grid; place-items: center; color: var(--text-2);
+  }
+  .set-item__body { flex: 1 1 auto; min-width: 0; }
+  .set-item__title { display: block; font-size: 15px; font-weight: 600; color: var(--text); }
+  .set-item__desc { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.4; color: var(--dim); }
+  .set-item__chev { flex: 0 0 auto; color: var(--dim); }
+
+  /* ---------- Toast (same as index.html / buy.html) ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+    padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Bottom tab bar (same as index.html / buy.html) ---------- */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+    color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ==========================================================
+     4. RESPONSIVE
+     ========================================================== */
+  @media (max-width: 359px) {
+    .set-item { padding: 14px 12px; gap: 11px; }
+    .set-item__desc { font-size: 12px; }
+  }
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+  }
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+    .tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="topbar__back" href="index.html" aria-label="Back to home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <h1 class="topbar__title">Settings</h1>
+    <div class="topbar__spacer" aria-hidden="true"></div>
+  </header>
+
+  <!-- ============ SETTINGS LIST ============ -->
+  <div class="settings-list" role="list">
+
+    <!-- General -->
+    <button type="button" class="set-item" role="listitem" data-section="General">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7"
+                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">General</span>
+        <span class="set-item__desc">Currency conversion, primary currency, language and search engine.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Security and privacy -->
+    <button type="button" class="set-item" role="listitem" data-section="Security and privacy">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="10.5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="15.5" r="1.6" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Security and privacy</span>
+        <span class="set-item__desc">Privacy settings, analytics, auto-lock and app permissions.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Advanced -->
+    <button type="button" class="set-item" role="listitem" data-section="Advanced">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M4 17h6M14 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M4 7h10M18 7h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="17" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="16" cy="7" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Advanced</span>
+        <span class="set-item__desc">Developer features, reset account, testnets, state logs and custom RPC.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Backup and sync -->
+    <button type="button" class="set-item" role="listitem" data-section="Backup and sync">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 15V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Backup and sync</span>
+        <span class="set-item__desc">Back up your accounts and sync settings.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Notifications -->
+    <button type="button" class="set-item" role="listitem" data-section="Notifications">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.7 20a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Notifications</span>
+        <span class="set-item__desc">Manage your notifications.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Buy and sell crypto -->
+    <button type="button" class="set-item" role="listitem" data-section="Buy and sell crypto">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8.5 9.5h7M8.5 14.5h7M12 9.5V7M10 12h4M12 17v-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Buy and sell crypto</span>
+        <span class="set-item__desc">Region and payment provider preferences.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Experimental -->
+    <button type="button" class="set-item" role="listitem" data-section="Experimental">
+      <span class="set-item__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M10 2.5v7.2L4.4 20.1A1.4 1.4 0 0 0 5.6 22h12.8a1.4 1.4 0 0 0 1.2-1.9L14 9.7V2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 2.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M7 15h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="set-item__body">
+        <span class="set-item__title">Experimental</span>
+        <span class="set-item__desc">WalletConnect and early feature previews.</span>
+      </span>
+      <svg class="set-item__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+  </div>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR (same as index.html / buy.html) ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <a class="tab" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <a class="tab" href="swap.html">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </a>
+
+  <a class="tab" href="discover.html">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </a>
+
+  <a class="tab is-active" href="settings.html" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </a>
+</nav>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------- Toast ---------- */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2200);
+  }
+
+  /* ---------- Settings rows ---------- */
+  document.querySelectorAll(".set-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      showToast(btn.dataset.section + " \u2014 opening soon");
+    });
+  });
+})();
+</script>
+</body>
+</html>

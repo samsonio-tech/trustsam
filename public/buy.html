@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0D0F" />
+<title>Trust wallet — Buy ETH</title>
+<style>
+  /* ==========================================================
+     1. DESIGN TOKENS  (identical to index.html)
+     ========================================================== */
+  :root {
+    --bg:        #0B0D0F;
+    --card:      #14171A;
+    --pill:      #1E242B;
+    --hairline:  rgba(255,255,255,.07);
+
+    --text:      #FFFFFF;
+    --text-2:    #E9EBEF;
+    --dim:       #8A96A0;
+
+    --blue:      #3861FB;
+    --blue-2:    #2F66F6;
+    --green:     #16C784;
+    --red:       #F6465D;
+    --orange:    #F7931A;
+    --track:     #3A424A;
+
+    --r-card:    16px;
+    --r-sm:      8px;
+    --r-pill:    999px;
+
+    --gutter:    16px;
+    --tabbar-h:  62px;
+    --font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ==========================================================
+     2. RESET
+     ========================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: #050608;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg { display: block; }
+
+  /* ==========================================================
+     3. APP SHELL
+     ========================================================== */
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      var(--gutter)
+      calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; height: 48px; }
+
+  .topbar__back {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .topbar__back:hover { background: var(--card); }
+
+  .topbar__title-wrap { flex: 1 1 auto; min-width: 0; text-align: center; }
+  .topbar__title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .topbar__sub { margin-top: 1px; font-size: 12px; color: var(--dim); }
+
+  .topbar__gear {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-pill);
+    display: grid; place-items: center; color: var(--text-2);
+    transition: background-color .15s ease;
+  }
+  .topbar__gear:hover { background: var(--card); }
+
+  /* ---------- Amount area ---------- */
+  .amount-area {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 26px 0 12px; min-height: 170px;
+  }
+  .amount-display {
+    font-size: clamp(36px, 11vw, 48px); font-weight: 700; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; color: var(--text); line-height: 1.1;
+  }
+  .amount-display .currency {
+    font-size: .55em; font-weight: 600; color: var(--dim); margin-right: 4px;
+  }
+
+  .pay-method {
+    margin-top: 16px; display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: var(--r-pill);
+    background: var(--pill); color: var(--text-2);
+    font-size: 14px; font-weight: 600;
+    transition: background-color .15s ease;
+  }
+  .pay-method:hover { background: #252C34; }
+  .pay-method svg { width: 16px; height: 16px; }
+
+  /* ---------- CTA + powered ---------- */
+  .powered { margin: 8px 0 14px; text-align: center; font-size: 12px; color: var(--dim); }
+
+  .cta {
+    width: 100%; padding: 15px 16px; border-radius: var(--r-sm);
+    background: var(--blue); color: #fff;
+    font-size: 15px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase;
+    transition: background-color .15s ease, opacity .15s ease;
+  }
+  .cta:hover { background: var(--blue-2); }
+  .cta:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ---------- Keypad ---------- */
+  .keypad {
+    margin-top: 18px; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .key {
+    height: 56px; border-radius: var(--r-card);
+    background: var(--card); border: 1px solid var(--hairline);
+    font-size: 22px; font-weight: 600; color: var(--text);
+    display: grid; place-items: center;
+    transition: background-color .12s ease, transform .12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .key:hover { background: #181C20; }
+  .key:active { background: var(--pill); transform: scale(.96); }
+  .key--muted { color: var(--dim); }
+
+  /* ---------- Buttons (maintenance overlay) ---------- */
+  .btn {
+    flex: 1 1 auto; padding: 12px 16px; font-size: 14px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; color: #fff;
+    background: var(--blue); border-radius: var(--r-sm); transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--blue-2); }
+  .btn--ghost { background: transparent; border: 1px solid var(--hairline); color: var(--text-2); }
+  .btn--ghost:hover { background: var(--pill); }
+
+  /* ---------- Maintenance overlay (same as index.html) ---------- */
+  .maint {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px;
+    background: rgba(5,6,8,.74); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .maint.is-open { opacity: 1; pointer-events: auto; }
+  .maint__card {
+    width: 100%; max-width: 336px; background: var(--card); border: 1px solid var(--hairline);
+    border-radius: 18px; padding: 26px 22px 20px; text-align: center;
+    box-shadow: 0 26px 60px rgba(0,0,0,.65);
+    transform: translateY(10px) scale(.97); transition: transform .22s cubic-bezier(.2,.8,.3,1);
+  }
+  .maint.is-open .maint__card { transform: none; }
+  .maint__icon { width: 66px; height: 66px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; background: rgba(246,70,93,.12); border: 1px solid rgba(246,70,93,.32); color: var(--red); }
+  .maint__title { margin: 0 0 8px; font-size: 17.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .maint__text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+  .maint__meta { display: inline-flex; align-items: center; gap: 6px; margin: 14px 0 0; padding: 4px 10px; border-radius: var(--r-pill); background: rgba(255,255,255,.05); border: 1px solid var(--hairline); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+  .maint__meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px rgba(246,70,93,.18); }
+  .maint__row { display: flex; gap: 9px; margin-top: 20px; }
+  .maint__row .btn { padding: 11px 14px; font-size: 13px; }
+
+  /* ---------- Toast (same as index.html) ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(6px); z-index: 80; max-width: min(90vw, 380px);
+    padding: 10px 16px; background: #252C34; color: var(--text-2); font-size: 13.5px;
+    border-radius: var(--r-pill); border: 1px solid var(--hairline);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Bottom tab bar (same as index.html) ---------- */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 30;
+    width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,15,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--hairline); padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 2px;
+    color: var(--dim); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+    border-radius: var(--r-sm); -webkit-tap-highlight-color: transparent;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.is-active { color: var(--blue); }
+  .tab:active svg { transform: scale(.92); }
+
+  /* ==========================================================
+     4. RESPONSIVE
+     ========================================================== */
+  @media (max-width: 359px) {
+    .key { height: 50px; font-size: 20px; }
+    .amount-display { font-size: clamp(30px, 10vw, 38px); }
+    .maint__row .btn { padding: 11px 10px; font-size: 12px; }
+  }
+  @media (max-width: 400px) {
+    :root { --gutter: 14px; }
+  }
+  @media (min-width: 520px) {
+    body { padding: 28px 0 110px; }
+    .app { min-height: auto; border-radius: 28px; border: 1px solid rgba(255,255,255,.06); box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 20px 22px 32px; }
+    .tabbar { bottom: 14px; width: min(100%, 430px); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 8px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="topbar__back" href="index.html" aria-label="Back to home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <div class="topbar__title-wrap">
+      <div class="topbar__title">Buy ETH</div>
+      <div class="topbar__sub">on Ethereum · Trust wallet</div>
+    </div>
+    <button class="topbar__gear" type="button" id="settingsBtn" aria-label="Buy settings" aria-haspopup="dialog">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 2.8v2M10 15.2v2M2.8 10h2M15.2 10h2M4.9 4.9l1.4 1.4M13.7 13.7l1.4 1.4M15.1 4.9l-1.4 1.4M6.3 13.7l-1.4 1.4"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============ AMOUNT ============ -->
+  <div class="amount-area">
+    <div class="amount-display" id="amountDisplay">
+      <span class="currency">$</span><span id="amountValue">50,000</span>
+    </div>
+
+    <button class="pay-method" type="button" id="payMethod" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17.06 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.02.07-.42 1.44-1.38 2.83ZM13 3.5c.73-.83 1.94-1.46 2.96-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.03-3.11Z"/>
+      </svg>
+      Apple Pay
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ============ CTA + KEYPAD ============ -->
+  <p class="powered">Powered by MoonPay · UI preview only</p>
+
+  <button class="cta" type="button" id="continueBtn">Continue</button>
+
+  <div class="keypad" id="keypad" aria-label="Amount keypad">
+    <button class="key" type="button" data-key="1">1</button>
+    <button class="key" type="button" data-key="2">2</button>
+    <button class="key" type="button" data-key="3">3</button>
+    <button class="key" type="button" data-key="4">4</button>
+    <button class="key" type="button" data-key="5">5</button>
+    <button class="key" type="button" data-key="6">6</button>
+    <button class="key" type="button" data-key="7">7</button>
+    <button class="key" type="button" data-key="8">8</button>
+    <button class="key" type="button" data-key="9">9</button>
+    <button class="key key--muted" type="button" data-key="." aria-label="Decimal point">.</button>
+    <button class="key" type="button" data-key="0">0</button>
+    <button class="key key--muted" type="button" data-key="back" aria-label="Backspace">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M8.7 5h10.6c.7 0 1.2.5 1.2 1.2v11.6c0 .7-.5 1.2-1.2 1.2H8.7a1.2 1.2 0 0 1-.93-.44L2.9 12.4a.62.62 0 0 1 0-.8l4.87-6.16A1.2 1.2 0 0 1 8.7 5Z"
+              stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="m11.6 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- ============ BOTTOM TAB BAR (same as index.html) ============ -->
+<nav class="tabbar" aria-label="Primary">
+  <a class="tab" href="index.html" aria-label="Home">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 9.5 11 3.5l7 6v8.5a1 1 0 0 1-1 1h-4v-5h-4v5H5a1 1 0 0 1-1-1V9.5Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <button class="tab" type="button" data-tab="swap" data-action="maintenance">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M4 7.5h12l-3.5-3.5M18 14.5H6l3.5 3.5"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Swap
+  </button>
+
+  <button class="tab" type="button" data-tab="discover" data-action="maintenance">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m14.5 7.5-2 5-5 2 2-5 5-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Discover
+  </button>
+
+  <button class="tab" type="button" data-tab="settings" data-action="maintenance">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 3v2M11 17v2M3 11h2M17 11h2M5.4 5.4l1.4 1.4M15.2 15.2l1.4 1.4M16.6 5.4l-1.4 1.4M6.8 15.2l-1.4 1.4"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Settings
+  </button>
+</nav>
+
+<!-- ============ MAINTENANCE OVERLAY (same as index.html) ============ -->
+<div class="maint" id="maint" role="dialog" aria-modal="true" aria-labelledby="maintTitle" aria-hidden="true">
+  <div class="maint__card">
+    <div class="maint__icon" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+        <path d="M4 26.5h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+        <path d="M6 12.5a12 12 0 0 1 6.2-3.3M14.5 8.2a12 12 0 0 1 11.5 4.3" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10 17.5a7.5 7.5 0 0 1 3.2-1.7M17.6 16.1a7.5 7.5 0 0 1 4.4 1.4" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="16" cy="22.4" r="1.9" fill="currentColor"/>
+        <path d="M6 7 26 27" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h2 class="maint__title" id="maintTitle">Service temporarily unavailable</h2>
+    <p class="maint__text">
+      Trust Sam is under maintenance right now. Buying, sending, swapping and
+      receiving are paused until then — no payment is taken on this page.
+    </p>
+
+    <p class="maint__meta"><span class="dot" aria-hidden="true"></span><span id="maintMeta">Maintenance in progress</span></p>
+
+    <div class="maint__row">
+      <button class="btn btn--ghost" type="button" id="maintClose">Close</button>
+      <button class="btn" type="button" id="maintRetry">Try again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------- Elements ---------- */
+  const amountEl    = document.getElementById("amountValue");
+  const continueBtn = document.getElementById("continueBtn");
+  const keypad      = document.getElementById("keypad");
+  const toast       = document.getElementById("toast");
+
+  /* ---------- Keypad state ---------- */
+  const MAX_LEN = 12;
+  let value = "50000";
+
+  const isValid = (v) => {
+    if (!v) return false;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
+  };
+
+  const formatAmount = (v) => {
+    if (!v) return "0";
+    const parts = v.split(".");
+    const int = (parts[0] || "0").replace(/^0+(?=\d)/, "");
+    const intFormatted = Number(int || "0").toLocaleString("en-US");
+    return parts.length > 1 ? intFormatted + "." + parts[1] : intFormatted;
+  };
+
+  function render() {
+    amountEl.textContent = formatAmount(value);
+    continueBtn.disabled = !isValid(value);
+  }
+
+  function pressKey(key) {
+    if (key === "back") {
+      value = value.slice(0, -1);
+    } else if (key === ".") {
+      if (!value.includes(".")) value = (value === "" || value === "0") ? "0." : value + ".";
+    } else { // digit
+      if (value === "0") {
+        value = key;                 // "0" + digit replaces the leading zero
+      } else if (value === "") {
+        value = key;                 // first digit after clearing
+      } else if (value.length < MAX_LEN) {
+        value += key;
+      }
+    }
+    render();
+  }
+
+  keypad.addEventListener("click", (e) => {
+    const key = e.target.closest("[data-key]");
+    if (key) pressKey(key.dataset.key);
+  });
+
+  /* ---------- Toast ---------- */
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2400);
+  }
+
+  /* ---------- Maintenance overlay (same behaviour as index.html) ---------- */
+  const maint      = document.getElementById("maint");
+  const maintMeta  = document.getElementById("maintMeta");
+  const maintClose = document.getElementById("maintClose");
+  const maintRetry = document.getElementById("maintRetry");
+  let maintReturnFocus = null;
+
+  function openMaint(label) {
+    maintReturnFocus = document.activeElement;
+    maintMeta.textContent = label
+      ? label + " \u2014 maintenance in progress"
+      : "Maintenance in progress";
+    maint.classList.add("is-open");
+    maint.setAttribute("aria-hidden", "false");
+    maintClose.focus();
+  }
+
+  function closeMaint() {
+    maint.classList.remove("is-open");
+    maint.setAttribute("aria-hidden", "true");
+    if (maintReturnFocus && maintReturnFocus.focus) maintReturnFocus.focus();
+  }
+
+  maintClose.addEventListener("click", closeMaint);
+
+  maintRetry.addEventListener("click", () => {
+    maintMeta.textContent = "Still under maintenance \u2014 no ETA yet";
+    showToast("Connection unavailable \u00b7 this page will be available shortly");
+  });
+
+  maint.addEventListener("click", (e) => { if (e.target === maint) closeMaint(); });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && maint.classList.contains("is-open")) closeMaint();
+  });
+
+  /* ---------- Wiring ---------- */
+  continueBtn.addEventListener("click", () => {
+    if (continueBtn.disabled) return;
+    openMaint("Buy \u00b7 NGN " + formatAmount(value) + " via Apple Pay");
+  });
+
+  document.getElementById("payMethod").addEventListener("click", () => openMaint("Payment methods"));
+  document.getElementById("settingsBtn").addEventListener("click", () => openMaint("Buy settings"));
+
+  document.querySelectorAll("[data-action]").forEach((el) => {
+    el.addEventListener("click", () => openMaint(el.textContent.replace(/\s+/g, " ").trim()));
+  });
+
+  /* ---------- Init ---------- */
+  render();
+})();
+</script>
+</body>
+</html>
